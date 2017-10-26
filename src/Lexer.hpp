@@ -16,6 +16,7 @@ struct Token
         tok_eof = 0,
         tok_def = -1,
         tok_err = -2,
+        tok_pun = -3,
         tok_lit_int = 1,
         tok_lit_dbl = 2,
         tok_lit_bool = 3,
@@ -28,14 +29,6 @@ struct Token
     Token(Type type, string value) : value(move(value)), type(type) {}
 
     union { int intValue; double doubleValue; bool boolValue; };
-
-    static Token eof();
-    static Token def(string value);
-    static Token err(string value);
-    static Token lit_int(string value, int intValue);
-    static Token lit_dbl(string value, double doubleValue);
-    static Token lit_bool(string value, bool boolValue);
-    static Token lit_str(string value);
 };
 
 class Lexer 

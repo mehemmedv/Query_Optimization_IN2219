@@ -4,47 +4,16 @@
 using namespace std;
 //---------------------------------------------------------------------------
 
-Token Token::eof()
+
+bool ismultipunct(char c)
 {
-    return Token(Type::tok_eof, string());
+   return c == '<' || c == '=' || c == '>';
 }
 
-Token Token::def(string value)
+bool issinglepunct(char c)
 {
-    return Token(Type::tok_def, move(value));
+   return ispunct(c) && !ismultipunct(c);
 }
-
-Token Token::err(string value)
-{
-    return Token(Type::tok_err, move(value));
-}
-
-Token Token::lit_int(string value, int intValue)
-{
-    Token retval(Type::tok_lit_int, move(value));
-    retval.intValue = intValue;
-    return retval;
-}
-
-Token Token::lit_dbl(string value, double doubleValue)
-{
-    Token retval(Type::tok_lit_dbl, move(value));
-    retval.doubleValue = doubleValue;
-    return retval;
-}
-
-Token Token::lit_bool(string value, bool boolValue)
-{
-    Token retval(Type::tok_lit_bool, move(value));
-    retval.boolValue = boolValue;
-    return retval;
-}
-
-Token Token::lit_str(string value)
-{
-    return Token(Type::tok_lit_int, move(value));
-}
-
 
 void Lexer::operator++()
 {
@@ -113,10 +82,23 @@ void Lexer::operator++()
    }
    
    current << c;
+   char oldc = c;
    input.get(c);
-   while(!isspace(c) && !input.eof() && c != terminator) {
+   while(!input.eof() && c != terminator && !isspace(c)
+        && (!isalnum(oldc) || isalnum(c)) //isword ==> read alphanum
+        && (!ismultipunct(oldc) || ismultipunct(c)) //ismultipunc ==> read multipunctuation (==)
+        && (!issinglepunct(oldc)) //only read single comma
+      ) {
       current << c;
       input.get(c);
+   }
+   
+   if (!input.eof() && c != terminator)
+      input.putback(c);
+      
+   if (ispunct(oldc)) {
+      last_type = Token::Type::tok_pun;
+      return;
    }
    
    locale loc;
@@ -136,23 +118,29 @@ Token Lexer::operator*()
    
    switch (last_type) {
       case Token::Type::tok_eof:
-         return Token::eof();
+         return Token(last_type, string());
       case Token::Type::tok_def:
-         return Token::def(value);
       case Token::Type::tok_err:
-         return Token::err(value);
-      case Token::Type::tok_lit_int:
+      case Token::Type::tok_pun:
+         return Token(last_type, move(value));
+      case Token::Type::tok_lit_int: {
          int intValue; current >> intValue;
-         return Token::lit_int(value, intValue);
-      case Token::Type::tok_lit_dbl:
+         Token retval(last_type, move(value));
+         retval.intValue = intValue;
+         return retval;
+      } case Token::Type::tok_lit_dbl: {
          double doubleValue; current >> doubleValue;
-         return Token::lit_dbl(value, doubleValue);
-      case Token::Type::tok_lit_bool:
+         Token retval(last_type, move(value));
+         retval.doubleValue = doubleValue;
+         return retval;
+      } case Token::Type::tok_lit_bool: {
          bool boolValue = value[0] == 't' || value[0] == 'T';
-         return Token::lit_bool(value, boolValue);
-      case Token::Type::tok_lit_str:
-         return Token::lit_str(value);
+         Token retval(last_type, move(value));
+         retval.boolValue = boolValue;
+         return retval;
+      } case Token::Type::tok_lit_str:
+         return Token(last_type, move(value));
       default:
-         return Token::err(value);
+         return Token(Token::Type::tok_err, move(value));
    }
 }
