@@ -1,4 +1,5 @@
 #include "Database.hpp"
+#include "Lexer.hpp"
 #include "operator/Tablescan.hpp"
 #include "operator/CrossProduct.hpp"
 #include "operator/Selection.hpp"
