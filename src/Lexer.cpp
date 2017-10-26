@@ -15,22 +15,22 @@ bool issinglepunct(char c)
    return ispunct(c) && !ismultipunct(c);
 }
 
-void Lexer::operator++()
+void Lexer::readNext()
 {
    if (last_type == Token::Type::tok_eof)
       return;
-   
+
    current.clear();
-   
+
    char c;
    input.get(c);
    if (input.eof() || c == terminator) {
       last_type = Token::Type::tok_eof;
       return;
    }
-   
+
    while (isspace(c)) input.get(c);
-   
+
    if (c == '-' || c == '+')
    {
       current << c;
@@ -41,7 +41,7 @@ void Lexer::operator++()
          return;
       }
    }
-   
+
    if (isdigit(c)) {
       current << c;
       input.get(c);
@@ -68,7 +68,7 @@ void Lexer::operator++()
          return;
       }
    }
-   
+
    if (c == '"') {
       input.get(c);
       while(!input.eof() && c != '"') {
@@ -80,19 +80,19 @@ void Lexer::operator++()
       last_type = Token::Type::tok_lit_str;
       return;
    }
-   
+
    current << c;
    char oldc = c;
    input.get(c);
    while(!input.eof() && c != terminator && !isspace(c)
-        && (!isalnum(oldc) || isalnum(c)) //isword ==> read alphanum
-        && (!ismultipunct(oldc) || ismultipunct(c)) //ismultipunc ==> read multipunctuation (==)
-        && (!issinglepunct(oldc)) //only read single comma
+      && (!isalnum(oldc) || isalnum(c)) //isword ==> read alphanum
+      && (!ismultipunct(oldc) || ismultipunct(c)) //ismultipunc ==> read multipunctuation (==)
+      && (!issinglepunct(oldc)) //only read single comma
       ) {
       current << c;
       input.get(c);
    }
-   
+
    if (!input.eof() && c != terminator)
       input.putback(c);
       
@@ -100,19 +100,26 @@ void Lexer::operator++()
       last_type = Token::Type::tok_pun;
       return;
    }
-   
+
    locale loc;
-   string checkstr = tolower(current.str(), loc);
+   string checkstr = current.str();
    if (checkstr == "true" || checkstr == "false") {
       last_type = Token::Type::tok_lit_bool;
       return;
    }
-   
+
    last_type = Token::Type::tok_def;
    return;
 }
 
-Token Lexer::operator*()
+void Lexer::operator++()
+{
+   readNext();
+   current_token = getToken();
+   current.str(string());
+}
+
+Token Lexer::getToken()
 {
    string value = current.str();
    
@@ -143,4 +150,11 @@ Token Lexer::operator*()
       default:
          return Token(Token::Type::tok_err, move(value));
    }
+}
+
+Token Lexer::operator*()
+{
+   if (last_type == Token::Type::tok_eof)
+      return Token(last_type, string());
+   return current_token;
 }
