@@ -101,8 +101,8 @@ void Lexer::readNext()
       return;
    }
 
-   locale loc;
    string checkstr = current.str();
+   //TODO Better boolean checking
    if (checkstr == "true" || checkstr == "false") {
       last_type = Token::Type::tok_lit_bool;
       return;

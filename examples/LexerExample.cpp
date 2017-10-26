@@ -17,11 +17,11 @@ int main()
         if ((*mylex).is_literal()) {
             Token::Type mytype = (*mylex).type;
             if (mytype == Token::Type::tok_lit_int)
-                cout << "int: ";
+                cout << "int(" << (*mylex).intValue << "): ";
             if (mytype == Token::Type::tok_lit_dbl)
-                cout << "double: ";
+                cout << "double(" << (*mylex).doubleValue << "): ";
             if (mytype == Token::Type::tok_lit_bool)
-                cout << "bool: ";
+                cout << "bool(" << (*mylex).boolValue << "): ";
             if (mytype == Token::Type::tok_lit_str)
                 cout << "string: ";
         }
