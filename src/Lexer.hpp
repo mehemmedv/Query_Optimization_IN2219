@@ -44,12 +44,11 @@ private:
    istream& input;
    stringstream current;
    Token::Type last_type;
-   
-   Token getToken();
-   
+   char terminator;
 public:
-   Lexer(istream& input) : input(input) {}
-
+   Lexer(istream& input, char terminator = '\0')
+    : input(input), terminator(terminator) {}
+   
    void operator++();
    Token operator*();
 };
