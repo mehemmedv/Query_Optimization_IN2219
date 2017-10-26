@@ -15,7 +15,7 @@ Token Token::def(string value)
 
 Token Token::err(string value)
 {
-    return Token(Type::tok_err move(value));
+    return Token(Type::tok_err, move(value));
 }
 
 Token Token::lit_int(string value, int intValue)
