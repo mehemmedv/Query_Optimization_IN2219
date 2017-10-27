@@ -6,10 +6,11 @@
 using namespace std;
 //---------------------------------------------------------------------------
 
-string sample = "select * from momo,coco, hoho where jojo=6.2 and lolo=\"82\" and ko.ko=hoho and zozo = \"li lo\" and altan=5 and truth=true";
+
 
 int main()
 {
+    string sample = "select * from momo,coco, hoho where jojo=6.2 and lolo=\"82\" and ko.ko=hoho and zozo = \"li lo\" and altan=5 and truth=true";
     cout << sample << endl;
     stringstream samplestream(sample);
     Lexer mylex(samplestream, '\n');

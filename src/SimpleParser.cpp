@@ -6,8 +6,9 @@ bool peek_check(Lexer& lexer, const string& check_value)
 {
     if ((*lexer).type == Token::Type::tok_eof)
         return false;
-    std::locale loc;
-    if (tolower((*lexer).value, loc) != check_value) {
+    //std::locale loc;
+    // TODO: lower
+    if ((*lexer).value != check_value) {
         return false;
     }
     return true;
@@ -77,15 +78,20 @@ SqlPredicate readSqlPredicate(Lexer& lexer)
     lhs.attribute = *lexer;
     ++lexer;
     
+    if (!peek_check(lexer, "=")) throw SqlParseException();
+    ++lexer;
+    
     Token rhsfirst = *lexer;
     ++lexer;
     
     if (rhsfirst.is_literal()) {
         return SqlPredicate(lhs, rhsfirst);
     } else {
+        if (!peek_check(lexer, ".")) throw SqlParseException();
+        ++lexer;
         SqlAttribute rhs;
         rhs.binding = rhsfirst;
-        lhs.attribute = *lexer;
+        rhs.attribute = *lexer;
         ++lexer;
         
         return SqlPredicate(lhs, rhs);
@@ -99,12 +105,9 @@ void parse_where(Lexer& lexer, SqlParse& sql)
     ++lexer;
     sql.predicates.push_back(readSqlPredicate(lexer));
     
-    while (!peek_check(lexer, "where"))
+    while ((*lexer).type != Token::Type::tok_eof)
     {
-        if ((*lexer).type == Token::Type::tok_eof)
-            throw SqlParseException();
-        
-        if (!peek_check(lexer, ",")) throw SqlParseException();
+        if (!peek_check(lexer, "and")) throw SqlParseException();
         ++lexer;
         sql.predicates.push_back(readSqlPredicate(lexer));
     }
@@ -118,4 +121,6 @@ SqlParse SimpleParser::parse_stream(istream& input)
     parse_select(lexer, retval);
     parse_from(lexer, retval);
     parse_where(lexer, retval);
+    
+    return retval;
 }

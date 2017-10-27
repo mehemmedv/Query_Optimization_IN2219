@@ -24,17 +24,17 @@ void Lexer::readNext()
 
    char c;
    input.get(c);
-   if (input.eof() || c == terminator) {
+   if (!input || c == terminator) {
       last_type = Token::Type::tok_eof;
       return;
    }
 
-   while (isspace(c)) input.get(c);
+   while (isspace(c) && input) input.get(c);
 
    if (c == '-' || c == '+')
    {
       current << c;
-      input.get(c); while (isspace(c)) input.get(c);
+      input.get(c); while (isspace(c) && input) input.get(c);
       if (!isdigit(c)) {
          input.putback(c);
          last_type = Token::Type::tok_def;
@@ -45,7 +45,7 @@ void Lexer::readNext()
    if (isdigit(c)) {
       current << c;
       input.get(c);
-      while(isdigit(c)) {
+      while(isdigit(c) && input) {
          current << c;
          input.get(c);
       }
@@ -58,7 +58,7 @@ void Lexer::readNext()
       else { //c == '.'
          current << c;
          input.get(c);
-         while(isdigit(c)) {
+         while(isdigit(c) && input) {
             current << c;
             input.get(c);
          }
@@ -69,14 +69,14 @@ void Lexer::readNext()
       }
    }
 
-   if (c == '"') {
+   if (c == '\'') {
       input.get(c);
-      while(!input.eof() && c != '"') {
+      while(!input.eof() && c != '\'') {
          current << c;
          input.get(c);
       }
       
-      //don't put back '"'
+      //don't put back '\''
       last_type = Token::Type::tok_lit_str;
       return;
    }

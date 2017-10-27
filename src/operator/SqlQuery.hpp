@@ -18,10 +18,9 @@ private:
     map<string, unique_ptr<Tablescan>> bindings;
     map<string, map<string, const Register*>> registers;
     vector<const Register*> projection;
+    vector<unique_ptr<Register>> constantRegs;
     /// The input
     std::unique_ptr<Operator> input;
-    /// The output
-    std::vector<const Register*> output;
 public:
     /// Constructor
     SqlQuery(Database& db, const SqlParse& parse);
