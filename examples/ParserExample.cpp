@@ -5,17 +5,12 @@
 
 using namespace std;
 
-int main()
+void execute_query(Database& db, string str)
 {
-    string sample = "select name from studenten s, hoeren h, vorlesungen v where s.matrnr = h.matrnr and h.vorlnr=v.vorlnr and v.titel='Ethik'\0";
-    cout << sample << endl;
-    stringstream samplestream(sample);
-    
-    Database db;
-    db.open("data/uni");
+    stringstream inpstream(str);
     
     SimpleParser parser;
-    auto result = parser.parse_stream(samplestream);
+    auto result = parser.parse_stream(inpstream);
     
     unique_ptr<SqlQuery> query(new SqlQuery(db, result));
     Printer out(move(query));
@@ -25,6 +20,25 @@ int main()
     out.close();
     
     cout << "------done------" << endl;
+}
+
+int main()
+{
+    Database db;
+    db.open("data/uni");
+    
+    
+    //string sample = "select name, titel from professoren p, vorlesungen v where p.persnr = v.gelesenvon";
+    string sample = "select name from studenten s, hoeren h, vorlesungen v where s.matrnr = h.matrnr and h.vorlnr=v.vorlnr and v.titel='Ethik'\0";
+    cout << "> " << sample << endl;
+    execute_query(db, sample);
+    
+    string s;
+    cout << "> "; getline(cin, s);
+    while (s != "quit") {
+        execute_query(db, s);
+        cout << "> "; getline(cin, s);
+    }
     
     char c;
     cin>>c;
