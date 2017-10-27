@@ -5,10 +5,15 @@
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
+
+string sample = "select * from momo,coco, hoho where jojo=6.2 and lolo=\"82\" and ko.ko=hoho and zozo = \"li lo\" and altan=5 and truth=true";
+
 int main()
 {
-    Lexer mylex(cin, '\n');
-    //select * from momo,coco, hoho where jojo=6.2 and lolo="82" and koko=hoho and zozo = "li lo" and altan=5 and truth=true
+    cout << sample << endl;
+    stringstream samplestream(sample);
+    Lexer mylex(samplestream, '\n');
+    //select * from momo,coco, hoho where jojo=6.2 and lolo="82" and ko.ko=hoho and zozo = "li lo" and altan=5 and truth=true
     
     cout << "Lexer output: " << endl;
     while ((*mylex).type != Token::Type::tok_eof)
