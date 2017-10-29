@@ -14,7 +14,7 @@ void execute_query(Database& db, string str)
     SimpleParser parser;
     auto result = parser.parse_stream(inpstream);
     
-    auto semanticAnalyzer = new SemanticAnalysis(db);
+    auto semanticAnalyzer = new SemanticAnalysis(db); // semantic analysis
     semanticAnalyzer->analyze(result);
     
     unique_ptr<SqlQuery> query(new SqlQuery(db, result));

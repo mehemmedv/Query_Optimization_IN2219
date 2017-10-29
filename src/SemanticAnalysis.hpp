@@ -14,14 +14,14 @@ private:
 	std::unordered_map<std::string, SqlBinding> relations;
 	// check relation in the FROM clause
 	void checkRelation(SqlBinding& rel);
-	// resolve attribute
+	// check attributes
 	Attribute checkAttribute(SqlAttribute& attr);
 	Attribute checkAttribute(Token& attr);
 	// check join condition
 	void checkJoin(SqlPredicate& join);
 public:
 	explicit SemanticAnalysis(Database& db);
-	~SemanticAnalysis() = default;
+	~SemanticAnalysis();
 
 	class SemanticError: public std::runtime_error{
 	public:
