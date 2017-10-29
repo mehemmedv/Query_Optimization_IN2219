@@ -12,7 +12,7 @@ class Attribute
 {
    public:
    /// Possible types
-   enum class Type : unsigned { Int, Double, Bool, String };
+   enum class Type : unsigned { Int, Double, Bool, String, Constant};
 
    private:
    /// Name of the attribute
@@ -56,6 +56,10 @@ class Attribute
    bool getKey() const { return key; }
    /// Index available?
    bool getIndex() const { return index; }
+   
+   void setTypeConstant(){ type = Type::Constant;}
+   
+   //Type::Contant getConstant() { return Type::Constant;}
 
    /// Read
    void read(std::istream& in);

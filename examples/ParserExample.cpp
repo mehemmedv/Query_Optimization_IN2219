@@ -2,6 +2,8 @@
 #include "SimpleParser.hpp"
 #include "operator/SqlQuery.hpp"
 #include "operator/Printer.hpp"
+#include "SemanticAnalysis.hpp"
+
 
 using namespace std;
 
@@ -11,6 +13,9 @@ void execute_query(Database& db, string str)
     
     SimpleParser parser;
     auto result = parser.parse_stream(inpstream);
+    
+    auto semanticAnalyzer = new SemanticAnalysis(db);
+    semanticAnalyzer->analyze(result);
     
     unique_ptr<SqlQuery> query(new SqlQuery(db, result));
     Printer out(move(query));
