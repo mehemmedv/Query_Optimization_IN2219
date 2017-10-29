@@ -16,6 +16,14 @@ bin/lexerexample$(EXEEXT): bin/examples/LexerExample.o $(obj)
 bin/parserexample$(EXEEXT): bin/examples/ParserExample.o $(obj)
 	$(BUILDEXE)
 
+bin/hw01.2example$(EXEEXT): bin/examples/HW01.2Example.o $(obj)
+	$(BUILDEXE)
+
+bin/hw01.1example$(EXEEXT): bin/examples/HW01.1Example.o $(obj)
+	$(BUILDEXE)
+
+
+
 
 # Alias for all examples
-examples_bin: bin/scanexample$(EXEEXT) bin/selectexample$(EXEEXT) bin/joinexample$(EXEEXT) bin/chiexample$(EXEEXT) bin/lexerexample$(EXEEXT) bin/parserexample$(EXEEXT)
+examples_bin: bin/scanexample$(EXEEXT) bin/selectexample$(EXEEXT) bin/joinexample$(EXEEXT) bin/chiexample$(EXEEXT) bin/lexerexample$(EXEEXT) bin/parserexample$(EXEEXT) bin/hw01.2example$(EXEEXT) bin/hw01.1example$(EXEEXT)
