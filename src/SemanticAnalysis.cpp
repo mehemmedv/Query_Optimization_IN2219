@@ -11,10 +11,10 @@ void SemanticAnalysis::analyze(SqlParse& result){
 		checkRelation(r);
 	}
 
-	/// TODO: * case here
-	
-	for (auto& attr: result.projection){
-		checkAttribute(attr);
+	if (result.projection.begin()->value != "*") {
+		for (auto& attr: result.projection){
+			checkAttribute(attr);
+		}
 	}
 
 	for (auto& join: result.predicates){

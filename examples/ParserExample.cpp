@@ -12,10 +12,23 @@ void execute_query(Database& db, string str)
     stringstream inpstream(str);
     
     SimpleParser parser;
-    auto result = parser.parse_stream(inpstream);
+    SqlParse result;
+    
+    try {
+        result = parser.parse_stream(inpstream);
+    } catch(SqlParseException se) {
+        cout << "Semantic Error: " << se.what() << endl;
+        return;
+    }
     
     auto semanticAnalyzer = new SemanticAnalysis(db); // semantic analysis
-    semanticAnalyzer->analyze(result);
+    
+    try {
+        semanticAnalyzer->analyze(result);
+    } catch(SemanticAnalysis::SemanticError se) {
+        cout << "Semantic Error: " << se.what() << endl;
+        return;
+    }
     
     unique_ptr<SqlQuery> query(new SqlQuery(db, result));
     Printer out(move(query));

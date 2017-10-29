@@ -5,10 +5,8 @@
 #include <vector>
 #include "Lexer.hpp"
 
-struct SqlParseException : public exception {
-    const char * what () const throw () {
-       return "Sql Parse Exception";
-    }
+struct SqlParseException : public runtime_error {
+    SqlParseException(const string& msg) : runtime_error(msg) {}
  };
  
 struct SqlBinding
