@@ -140,8 +140,8 @@ Table& Database::getTable(const std::string& name)
    // Get a table
 {
    if (!tables.count(name)) {
-      cerr << "table " << name << " not found" << endl;
-      throw;
+      //cerr << "table " << name << " not found" << endl;
+      throw runtime_error("Table " + name  + " not found");
    }
    return tables[name];
 }

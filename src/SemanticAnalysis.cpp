@@ -26,12 +26,12 @@ void SemanticAnalysis::analyze(SqlParse& result){
 void SemanticAnalysis::checkRelation(SqlBinding& rel){
 	std::string key = rel.binding.value;
 	if (relations.find(key)!= relations.end()){
-		throw SemanticError("Duplicate table name in the FROM clause: "+ key);
+		throw SemanticError("Duplicate binding name in the FROM clause: "+ key);
 	}
 	try{
 		db.getTable(rel.relation.value);
 	} catch(...){
-		throw SemanticError("Table "+key + " does not exist");
+		throw SemanticError("Table " + rel.relation.value + " does not exist");
 	}
 	relations[key] = rel;
 }
