@@ -24,7 +24,17 @@ SqlQuery::SqlQuery(Database& db, const SqlParse& parse)
     
     //implement '*'
     if (!parse.projection.empty() && parse.projection.begin()->value == "*") {
-        // TODO: insert all columns
+        for (const auto& bind : parse.bindings) {
+            Table& mytable = db.getTable(bind.relation.value);
+            for(unsigned int i = 0; i < mytable.getAttributeCount(); i++) {
+                const Attribute& attr = mytable.getAttribute(i);
+                
+                const Register* mr = bindings[bind.binding.value]->getOutput(attr.getName());
+                if (mr) {
+                    projection.push_back(mr);
+                }
+            }
+        }
     } else {
         for (const auto& tok : parse.projection) {
             for (const auto& kv : bindings) {
