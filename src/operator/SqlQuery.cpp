@@ -9,7 +9,7 @@ SqlQuery::SqlQuery(Database& db, const SqlParse& parse)
 {
     // TODO: check correctness
     for (const auto& bind : parse.bindings) {
-        bindings.emplace(bind.binding.value, new Tablescan(db.getTable(bind.relation.value)));
+        bindings.emplace(bind.binding.value, unique_ptr<Tablescan>(new Tablescan(db.getTable(bind.relation.value))));
     }
     
     for (const auto& pred : parse.predicates) {
@@ -23,12 +23,16 @@ SqlQuery::SqlQuery(Database& db, const SqlParse& parse)
     }
     
     //implement '*'
-    for (const auto& tok : parse.projection) {
-        for (const auto& kv : bindings) {
-            const Register* mr = kv.second->getOutput(tok.value);
-            if (mr) {
-                projection.push_back(mr);
-                break;
+    if (!parse.projection.empty() && parse.projection.begin()->value == "*") {
+        // TODO: insert all columns
+    } else {
+        for (const auto& tok : parse.projection) {
+            for (const auto& kv : bindings) {
+                const Register* mr = kv.second->getOutput(tok.value);
+                if (mr) {
+                    projection.push_back(mr);
+                    break;
+                }
             }
         }
     }
