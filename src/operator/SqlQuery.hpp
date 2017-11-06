@@ -15,7 +15,7 @@
 class SqlQuery : public Operator
 {
 private:
-    map<string, unique_ptr<Tablescan>> bindings;
+    map<string, unique_ptr<Operator>> bindings;
     map<string, map<string, const Register*>> registers;
     vector<const Register*> projection;
     vector<unique_ptr<Register>> constantRegs;

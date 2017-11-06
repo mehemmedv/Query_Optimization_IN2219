@@ -83,7 +83,7 @@ void Attribute::read(istream& in)
       case Type::Bool: minValue.setBool(s2=="true"); break;
       case Type::String: minValue.setString(s2); break;
    }
-   in.get(); getToSpace(in,s); s2=unescape(s);
+   getToSpace(in,s); s2=unescape(s);
    switch (type) {
       case Type::Int: maxValue.setInt(atoi(s2.c_str())); break;
       case Type::Double: maxValue.setDouble(atof(s2.c_str())); break;
