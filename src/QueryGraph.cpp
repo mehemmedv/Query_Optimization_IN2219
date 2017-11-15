@@ -38,6 +38,7 @@ void QueryGraph::emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, Sql
     edges.emplace_back(index, selectivity, nodeA.index, nodeB.index, move(pred));
     
     adjacencyList[nodeA.index].push_back(index);
+    adjacencyList[nodeB.index].push_back(index);
 }
 
 bool QueryGraph::checkCycle()
