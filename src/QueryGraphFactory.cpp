@@ -20,10 +20,10 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse)
             continue;
         auto node = retval.getNode(pred.lhs.binding.value);
         
-        Table& mytable = bindtables[pred.lhs.binding.value];
+        Table& mytable = bindtables.find(pred.lhs.binding.value)->second;
         const Attribute& myattr = mytable.getAttribute(mytable.findAttribute(pred.lhs.attribute.value));
         float selectivity = 1.0f;
-        if (myattr.getKey) {
+        if (myattr.getKey()) {
             selectivity = 1.0 / mytable.getCardinality();
         } else {
             selectivity = 1.0f / myattr.getUniqueValues();
@@ -37,9 +37,9 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse)
         if (pred.type != SqlPredicate::Type::prd_attribute)
             continue;
         
-        Table& tableL = bindtables[pred.lhs.binding.value];
+        Table& tableL = bindtables.find(pred.lhs.binding.value)->second;
         const Attribute& attrL = tableL.getAttribute(tableL.findAttribute(pred.lhs.attribute.value));
-        Table& tableR = bindtables[pred.rhs.binding.value];
+        Table& tableR = bindtables.find(pred.rhs.binding.value)->second;
         const Attribute& attrR = tableR.getAttribute(tableR.findAttribute(pred.rhs.attribute.value));
         float selectivity = 1.0f;
         if (attrL.getKey() && attrR.getKey()) {
@@ -54,7 +54,7 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse)
         
         retval.emplaceEdge(retval.getNode(pred.lhs.binding.value),
                             retval.getNode(pred.rhs.binding.value),
-                            pred, selectivity);
+                            {pred}, selectivity);
     }
     
     return retval;

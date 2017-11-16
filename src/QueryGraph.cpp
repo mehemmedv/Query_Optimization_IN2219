@@ -6,8 +6,9 @@
 QueryNode& QueryGraph::getNode(const string& binding)
 {
     auto it = bindingToIndex.find(binding);
-    if (it == bindingToIndex.end())
+    if (it == bindingToIndex.end()) {
         throw new invalid_argument("binding is not valid");
+    }
     
     return getNode(it->second);
 }
@@ -22,33 +23,44 @@ QueryEdge& QueryGraph::getEdge(int index)
     return edges[index];
 }
 
-vector<int>& QueryGraph::getEdgeIndices(const QueryNode& node)
-{
-    return adjacencyList[node.index];
-}
-
 void QueryGraph::emplaceNode(SqlBinding binding, vector<SqlPredicate> preds, int cardinality)
 {
-    nodes.emplace_back(nodes.size(), cardinality, move(binding), move(preds));
+    string bindingstr = binding.binding.value;
+    int index = nodes.size();
+    nodes.push_back(QueryNode{index, cardinality, move(binding), move(preds)});
+    bindingToIndex.emplace(move(bindingstr), index);
 }
 
-void QueryGraph::emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, SqlPredicate pred, float selectivity)
+template <typename T1, typename T2>
+inline bool contains(const T1& container, const T2& value) {
+    return container.find(value) != container.end();
+}
+
+void QueryGraph::emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, const vector<SqlPredicate>& preds, float selectivity)
 {
+    auto edgeiter = adjacencyList[nodeA.index].find(nodeB.index);
+    if (edgeiter != adjacencyList[nodeA.index].end()) {
+        edges[edgeiter->second].selectivity *= selectivity;
+        for (const auto& pred : preds) {
+            edges[edgeiter->second].predicates.push_back(pred);
+        }
+        return;
+    }
+    //not found
     int index = edges.size();
-    edges.emplace_back(index, selectivity, nodeA.index, nodeB.index, move(pred));
+    edges.push_back(QueryEdge{index, selectivity, nodeA.index, nodeB.index, preds});
     
-    adjacencyList[nodeA.index].push_back(index);
-    adjacencyList[nodeB.index].push_back(index);
+    adjacencyList[nodeA.index].emplace(nodeB.index, index);
+    adjacencyList[nodeB.index].emplace(nodeA.index, index);
 }
 
 bool QueryGraph::checkCycle()
 {
     vector<bool> vis(nodes.size());
     stack<pair<int,int>> ms;
-    ms.emplace(0, -1);
+    ms.push(make_pair(0, -1));
     
-    while(!ms.empty())
-    {
+    while(!ms.empty()) {
         auto pa = ms.top();
         int cur = pa.first;
         int pre = pa.second;
@@ -59,15 +71,71 @@ bool QueryGraph::checkCycle()
             vis[cur] = true;
         }
         
-        for (auto edge : getEdges(getNode(cur))) {
+        for (auto& edge : getEdges(getNode(cur))) {
             int next = edge.other(cur);
             if (next == pre) {
                 continue;
             }
-            ms.emplace(next, cur);
+            ms.push(make_pair(next, cur));
         }
     }
     
+}
+
+QueryGraph traverse(int start, QueryGraph& original, vector<bool>& vis)
+{
+    QueryGraph retval;
+    stack<int> ms;
+    ms.push(start);
+    
+    vector<bool> pvis(original.getNodeCount());
+    
+    {
+        auto& mn = original.getNode(start);
+        pvis[start] = true;
+        retval.emplaceNode(mn.binding, mn.predicates, mn.cardinality);
+    }
+    
+    while(!ms.empty()) {
+        int cur = ms.top();
+        ms.pop();
+        auto& mn = original.getNode(cur);
+        
+        if (vis[cur]) {
+            continue;
+        }
+        vis[cur] = true;
+        
+        for (auto& edge : original.getEdges(original.getNode(cur))) {
+            int next = edge.other(cur);
+            ms.push(next);
+            
+            if (!pvis[cur]) {
+                pvis[cur] = true;
+                retval.emplaceNode(mn.binding, mn.predicates, mn.cardinality);
+            }
+            retval.emplaceEdge(retval.getNode(mn.binding.binding.value),
+                                retval.getNode(original.getNode(next).binding.binding.value),
+                                edge.predicates, edge.selectivity);
+        }
+    }
+    
+    return retval;
+}
+
+vector<QueryGraph> QueryGraph::getConnectedComponents()
+{
+    vector<QueryGraph> retval;
+    vector<bool> vis(getNodeCount());
+    
+    for (int i = 0; i < getNodeCount(); i++) {
+        if (vis[i]) {
+            continue;
+        }
+        retval.push_back(traverse(i, *this, vis));
+    }
+    
+    return retval;
 }
 
 //QueryGraph QueryGraph::buildMST();

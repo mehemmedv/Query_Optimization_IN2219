@@ -14,8 +14,7 @@ public:
     float selectivity;
     int nodeA;
     int nodeB;
-    SqlPredicate predicate; //not a vector because operators dont
-                            //support multi predicate/register joins
+    vector<SqlPredicate> predicates;
     
     int other(int current) { return (current == nodeA) ? nodeB : nodeA; }
 };
@@ -35,7 +34,7 @@ private:
     unordered_map<string, int> bindingToIndex;
     vector<QueryNode> nodes;
     vector<QueryEdge> edges;
-    vector<vector<int>> adjacencyList;  //int is index of edge in edges
+    vector<unordered_map<int,int>> adjacencyList;  //to, edge_index
 public:
     QueryGraph() {}
     
@@ -43,40 +42,41 @@ public:
     QueryNode& getNode(int index);
     QueryEdge& getEdge(int index);
     
+    int getNodeCount() { return nodes.size(); }
+    
     vector<QueryNode>& getAllNodes() { return nodes; }
     vector<QueryEdge>& getAllEdges() { return edges; }
     
-    vector<int>& getEdgeIndices(const QueryNode&);
-    
     void emplaceNode(SqlBinding, vector<SqlPredicate>, int cardinality);
-    void emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, SqlPredicate, float selectivity);
+    void emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, const vector<SqlPredicate>&, float selectivity);
     
     bool checkCycle();
     QueryGraph buildMST();
+    vector<QueryGraph> getConnectedComponents();
     
     class EdgeIterable
     {
     private:
-        const vector<int>& indices;
+        const unordered_map<int,int>& indices;
         vector<QueryEdge>& edges;
     public:
-        EdgeIterable(vector<int>& indices, vector<QueryEdge>& edges)
+        EdgeIterable(unordered_map<int,int>& indices, vector<QueryEdge>& edges)
             : indices(indices), edges(edges) {}
         
         class EdgeIterator
         {
         private:
-            vector<int>::const_iterator cur;
+            unordered_map<int,int>::const_iterator cur;
             vector<QueryEdge>& edges;
         public:
-            EdgeIterator(vector<QueryEdge>& edges, vector<int>::const_iterator beg) 
-                : edges(edges), cur(beg) {}
+            EdgeIterator(vector<QueryEdge>& edges, unordered_map<int,int>::const_iterator beg) 
+                : cur(beg), edges(edges) {}
             
             EdgeIterator& operator++() { cur++; return *this; }
             
             bool operator==(const EdgeIterator& other) { return cur == other.cur; }
             bool operator!=(const EdgeIterator& other) { return cur != other.cur; }
-            QueryEdge& operator*() { return edges[*cur]; }
+            QueryEdge& operator*() { return edges[cur->second]; }
         };
         
         EdgeIterator begin() { return EdgeIterator(edges, indices.begin()); }

@@ -3,10 +3,13 @@
 
 #include "Database.hpp"
 #include "QueryGraph.hpp"
+#include "QueryPlan.hpp"
 #include "SimpleParser.hpp"
 
 using namespace std;
 
 QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse);
+
+QueryPlan simplePlan(QueryGraph& graph);
 
 #endif
