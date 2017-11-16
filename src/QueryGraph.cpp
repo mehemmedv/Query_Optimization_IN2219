@@ -2,6 +2,7 @@
 
 #include <stack>
 #include <stdexcept>
+#include <algorithm>
     
 QueryNode& QueryGraph::getNode(const string& binding)
 {
@@ -190,4 +191,58 @@ string QueryGraph::graphviz()
     return output.str();
 }
 
-//QueryGraph QueryGraph::buildMST();
+// compare function for Query Edge
+bool QueryGraph::operator()(const QueryEdge& l, const QueryEdge& r){
+    if(l.selectivity * getAllNodes()[l.nodeA].cardinality * getAllNodes()[l.nodeB].cardinality >= r.selectivity * getAllNodes()[r.nodeA].cardinality * getAllNodes()[r.nodeB].cardinality)
+         return false;
+    return true;
+}
+
+// finding the leader of the set
+int QueryGraph::find(int node){
+    if(par[node] == node)
+    	return node;
+    return par[node] = find(par[node]);
+}
+
+// unioning two sets(join two trees)
+void QueryGraph::unionNodes(int nodeA, int nodeB){
+    int parA = find(nodeA);
+    int parB = find(nodeB);
+    
+    if(weight[parA] >= weight[parB]){
+        par[parB] = parA;
+        if(weight[parA] == weight[parB])
+            ++weight[parA];
+    } else{
+        par[parA] = parB;
+    }
+}
+
+QueryGraph QueryGraph::buildMST(){
+    QueryGraph querygraph;
+    
+    for(QueryNode node : getAllNodes() ){
+    	querygraph.emplaceNode(node.binding, node.predicates, node.cardinality);
+    }
+    
+    vector<QueryEdge> edges;
+    for(QueryEdge edge : getAllEdges())
+    	edges.push_back(edge);
+    
+    std::sort(edges.begin(), edges.end(), QueryGraph(*this));
+    int nodesSize = getAllNodes().size();
+    par = new int[nodesSize];
+    for(int i = 0; i < nodesSize; ++i)
+        par[i] = i, weight[i] = 0;
+    
+    for(QueryEdge edge : edges){
+        if(find(edge.nodeA) != find(edge.nodeB)){
+            querygraph.emplaceEdge(getAllNodes()[edge.nodeA], getAllNodes()[edge.nodeB], edge.predicates, edge.selectivity);
+            unionNodes(edge.nodeA, edge.nodeB);
+        }
+    }
+    
+    return querygraph;   
+    
+}

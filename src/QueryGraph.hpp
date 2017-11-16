@@ -35,6 +35,10 @@ private:
     vector<QueryNode> nodes;
     vector<QueryEdge> edges;
     vector<unordered_map<int,int>> adjacencyList;  //to, edge_index
+    
+    int* par; // these 2 are used for MST(union find)
+    int* weight;
+    
 public:
     QueryGraph() {}
     
@@ -51,7 +55,13 @@ public:
     void emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, const vector<SqlPredicate>&, float selectivity);
     
     bool checkCycle();
+    
+    bool operator()(const QueryEdge& l, const QueryEdge& r);
+    
     QueryGraph buildMST();
+    int find(int node);
+    void unionNodes(int nodeA, int nodeB);
+    
     vector<QueryGraph> getConnectedComponents();
     
     string graphviz();
