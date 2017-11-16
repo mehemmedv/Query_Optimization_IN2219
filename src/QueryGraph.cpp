@@ -193,7 +193,7 @@ string QueryGraph::graphviz()
 
 // compare function for Query Edge
 bool QueryGraph::operator()(const QueryEdge& l, const QueryEdge& r){
-    if(l.selectivity * getAllNodes()[l.nodeA].cardinality * getAllNodes()[l.nodeB].cardinality >= r.selectivity * getAllNodes()[r.nodeA].cardinality * getAllNodes()[r.nodeB].cardinality)
+    if(l.selectivity * getNode(l.nodeA).cardinality * getNode(l.nodeB).cardinality >= r.selectivity * getNode(r.nodeA).cardinality * getNode(r.nodeB).cardinality)
          return false;
     return true;
 }
@@ -238,7 +238,7 @@ QueryGraph QueryGraph::buildMST(){
     
     for(QueryEdge edge : edges){
         if(find(edge.nodeA) != find(edge.nodeB)){
-            querygraph.emplaceEdge(getAllNodes()[edge.nodeA], getAllNodes()[edge.nodeB], edge.predicates, edge.selectivity);
+            querygraph.emplaceEdge(getNode(edge.nodeA), getNode(edge.nodeB), edge.predicates, edge.selectivity);
             unionNodes(edge.nodeA, edge.nodeB);
         }
     }
