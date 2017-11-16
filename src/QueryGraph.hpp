@@ -54,6 +54,8 @@ public:
     QueryGraph buildMST();
     vector<QueryGraph> getConnectedComponents();
     
+    string graphviz();
+    
     class EdgeIterable
     {
     private:

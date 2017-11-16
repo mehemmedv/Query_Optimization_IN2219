@@ -3,6 +3,7 @@
 #include "operator/SqlQuery.hpp"
 #include "operator/Printer.hpp"
 #include "SemanticAnalysis.hpp"
+#include "QueryGraphFactory.hpp"
 
 
 using namespace std;
@@ -30,6 +31,13 @@ void execute_query(Database& db, string str)
         return;
     }
     
+    cout << endl;
+    
+    string graphviz = buildGraphFromParse(db, result).graphviz();
+    cout << "# Query graph in DOT format:" << endl << graphviz << endl << endl;
+    
+    cout << "# Results:" << endl;
+    
     unique_ptr<SqlQuery> query(new SqlQuery(db, result));
     Printer out(move(query));
     
@@ -37,7 +45,7 @@ void execute_query(Database& db, string str)
     while (out.next());
     out.close();
     
-    cout << "------done------" << endl;
+    cout << "------done------" << endl << endl;
 }
 
 int main()

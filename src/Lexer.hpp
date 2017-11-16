@@ -35,6 +35,8 @@ struct Token
    bool is_literal() { return type > 0; }
 };
 
+ostream& operator<<(ostream& out, const Token& tok);
+
 class Lexer 
 {
 private:

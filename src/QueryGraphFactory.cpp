@@ -18,7 +18,7 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse)
     for (const auto& pred : parse.predicates) {
         if (pred.type != SqlPredicate::Type::prd_constant)
             continue;
-        auto node = retval.getNode(pred.lhs.binding.value);
+        auto& node = retval.getNode(pred.lhs.binding.value);
         
         Table& mytable = bindtables.find(pred.lhs.binding.value)->second;
         const Attribute& myattr = mytable.getAttribute(mytable.findAttribute(pred.lhs.attribute.value));

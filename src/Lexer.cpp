@@ -158,3 +158,8 @@ Token Lexer::operator*()
       return Token(last_type, string());
    return current_token;
 }
+
+ostream& operator<<(ostream& out, const Token& tok)
+{
+   return out << tok.value;
+}

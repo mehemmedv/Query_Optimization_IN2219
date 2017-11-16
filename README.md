@@ -16,3 +16,5 @@ After `make`, bin/parserexample can be used to run and get the results for any S
 `select titel from vorlesungen v, studenten s, hoeren h where s.matrnr = h.matrnr and v.vorlnr = h.vorlnr and s.semester = 2`
 
 `select * from studenten s1, studenten s2, hoeren h1, hoeren h2 where s1.matrnr = h1.matrnr and s2.matrnr = h2.matrnr and h1.vorlnr = h2.vorlnr and s1.name = 'Schopenhauer'`
+
+The query graphs are also outputted in the Graphviz DOT format, which can be visualized in <http://www.webgraphviz.com/>.

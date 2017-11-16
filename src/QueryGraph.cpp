@@ -29,6 +29,7 @@ void QueryGraph::emplaceNode(SqlBinding binding, vector<SqlPredicate> preds, int
     int index = nodes.size();
     nodes.push_back(QueryNode{index, cardinality, move(binding), move(preds)});
     bindingToIndex.emplace(move(bindingstr), index);
+    adjacencyList.emplace_back();
 }
 
 template <typename T1, typename T2>
@@ -79,7 +80,7 @@ bool QueryGraph::checkCycle()
             ms.push(make_pair(next, cur));
         }
     }
-    
+    return false;
 }
 
 QueryGraph traverse(int start, QueryGraph& original, vector<bool>& vis)
@@ -136,6 +137,57 @@ vector<QueryGraph> QueryGraph::getConnectedComponents()
     }
     
     return retval;
+}
+
+string QueryGraph::graphviz()
+{
+    stringstream output;
+    output << "graph query {";
+    
+    for (auto& node : nodes) {
+        output << "n_" << node.index << " [label=\"";
+        output << node.binding.relation << " " << node.binding.binding << " [" << node.cardinality << "]";
+        output << "\"];";
+    }
+    
+    for (auto& node : nodes) {
+        if (node.predicates.empty()) {
+            continue;
+        }
+        output << "n_" << node.index << " -- " << "n_" << node.index << " [label=\"";
+        bool first = true;
+        for (auto& pred : node.predicates) {
+            if (first) {
+                first = false;
+            } else {
+                output << " and ";
+            }
+            output << pred.lhs.binding << "." << pred.lhs.attribute;
+            output << "=";
+            output << pred.constant;
+        }
+        output << "\"];";
+    }
+    
+    for (auto& edge : edges) {
+        output << "n_" << edge.nodeA << " -- " << "n_" << edge.nodeB << " [label=\"";
+        bool first = true;
+        for (auto& pred : edge.predicates) {
+            if (first) {
+                first = false;
+            } else {
+                output << " and ";
+            }
+            output << pred.lhs.binding << "." << pred.lhs.attribute;
+            output << "=";
+            output << pred.rhs.binding << "." << pred.rhs.attribute;
+        }
+        output << " [" << edge.selectivity << "]";
+        output << "\"];";
+    }
+    
+    output << "}";
+    return output.str();
 }
 
 //QueryGraph QueryGraph::buildMST();

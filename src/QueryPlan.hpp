@@ -34,8 +34,8 @@ struct SelectNode : OperatorNode
 {
     unique_ptr<OperatorNode> child;
     
-    Register* regl;
-    Register* regr;
+    const Register* regl;
+    const Register* regr;
     
     unique_ptr<Operator> execute();
 };
@@ -45,8 +45,8 @@ struct HashJoinNode : OperatorNode
     unique_ptr<OperatorNode> left;
     unique_ptr<OperatorNode> right;
     
-    Register* regl;
-    Register* regr;
+    const Register* regl;
+    const Register* regr;
     
     unique_ptr<Operator> execute();
 };
@@ -54,7 +54,7 @@ struct HashJoinNode : OperatorNode
 class QueryPlan
 {
 private:
-    unordered_map<pair<string,string>, Register*> registers; //bind, attr, reg
+    unordered_map<string, unordered_map<string, const Register*>> registers; //bind, attr, reg
     unique_ptr<OperatorNode> root;
 public:
     QueryPlan() {}
@@ -62,7 +62,7 @@ public:
     unordered_map<string, unique_ptr<Tablescan>> init(Database& db, const vector<SqlBinding>& bindings);
     
     void setRoot(unique_ptr<OperatorNode> root);
-    Register* getRegister(const string& bind, const string& attr);
+    const Register* getRegister(const string& bind, const string& attr);
     
     unique_ptr<Operator> execute();
 };
