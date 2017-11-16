@@ -161,5 +161,9 @@ Token Lexer::operator*()
 
 ostream& operator<<(ostream& out, const Token& tok)
 {
-   return out << tok.value;
+   if (tok.type == Token::Type::tok_lit_str) {
+      return out << "'" << tok.value << "'";
+   } else {
+      return out << tok.value;
+   }
 }
