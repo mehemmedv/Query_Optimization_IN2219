@@ -46,6 +46,16 @@ int Tree::cost(QueryGraph& querygraph, Tree* left, Tree* right){
     return cardinality(querygraph, left, right) + left->cost(querygraph) + right->cost(querygraph);    
 }
 
+Tree Tree::GOO(QueryGraph& querygraph){
+    std::vector<Tree> trees;
+    
+    for(auto &node : querygraph.getAllNodes()){
+        trees.push_back(Tree(node));
+    }
+    
+    
+}
+
 
 unique_ptr<Operator> TableScanNode::execute()
 {
