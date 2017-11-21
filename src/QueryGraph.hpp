@@ -26,6 +26,10 @@ public:
     int cardinality;
     SqlBinding binding;
     vector<SqlPredicate> predicates;
+    bool operator==(const QueryNode& a) const
+    {
+        return index == a.index;
+    }
 };
 
 class QueryGraph 

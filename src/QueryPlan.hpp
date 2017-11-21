@@ -10,6 +10,23 @@
 
 using namespace std;
 
+class Tree{
+private:
+    bool isLeaf;
+    QueryNode* node;
+    Tree *leftTree, *rightTree;
+    std::vector<QueryNode> getRelations(Tree* tree);
+
+public:
+    Tree();
+    
+    double cardinality(QueryGraph &querygarph, Tree* left = NULL, Tree* right = NULL);
+    
+    int cost(QueryGraph& querygraph, Tree* left = NULL, Tree* right = NULL);
+    
+    Tree GOO(QueryGraph& querygraph);
+}
+
 struct OperatorNode
 {
     virtual unique_ptr<Operator> execute() = 0;
