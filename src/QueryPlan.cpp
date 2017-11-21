@@ -52,10 +52,27 @@ Tree Tree::GOO(QueryGraph& querygraph){
     for(auto &node : querygraph.getAllNodes()){
         trees.push_back(Tree(node));
     }
-    
-    
-}
 
+    while(trees.size() > 1){
+        int minCost = cost(querygraph, &(trees[0]), &(trees[1]));
+        int leftIdx = 0, rightIdx = 1, currentLeftIdx = 0, currentRightIdx = 0;
+        for(auto leftIterator = trees.begin(); leftIterator != trees.end(); ++leftIterator, ++currentLeftIdx){
+            currentRightIdx = 0;
+            for(auto rightIterator = leftIterator + 1; rightIterator != tree.end(); ++rightIterator, ++currentRightIdx){
+                int currentCost = cost(querygraph, leftIterator, rightIterator);
+                if(currentCost < minCost){
+                    minCost = currentCost;
+                    leftIdx = currentLeftIdx;
+                    rightIdx = currentRightIdx;
+                }
+            }
+        }
+	trees.push_back(Tree(querygraph, &(trees[leftidx]), &(trees[rightIdx])));
+        trees.erase(trees.begin() + leftIdx);
+        trees.erase(trees.begin() + rightIdx - 1);
+    }
+    return trees[0];
+}
 
 unique_ptr<Operator> TableScanNode::execute()
 {

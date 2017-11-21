@@ -27,7 +27,7 @@ public:
     int cost(QueryGraph& querygraph, Tree* left = NULL, Tree* right = NULL);
     
     Tree GOO(QueryGraph& querygraph);
-}
+};
 
 struct OperatorNode
 {
