@@ -31,6 +31,7 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse)
         
         node.predicates.push_back(pred);
         node.cardinality *= selectivity;
+        node.cardinality = max(node.cardinality, 1);    //no 0 cardinality
     }
     
     for (const auto& pred : parse.predicates) {
