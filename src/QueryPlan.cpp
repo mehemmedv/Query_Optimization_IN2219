@@ -1,5 +1,5 @@
+#include "QueryGraph.hpp"
 #include "QueryPlan.hpp"
-
 #include "operator/CrossProduct.hpp"
 #include "operator/HashJoin.hpp"
 #include "operator/Selection.hpp"
@@ -40,38 +40,10 @@ double Tree::cardinality(QueryGraph &querygraph, Tree* left, Tree* right){
     return cardinality;
 }
 
-int Tree::cost(QueryGraph& querygraph, Tree* left, Tree* right){
+int Tree::cost(QueryGraph& querygraph, Tree* left = NULL, Tree* right = NULL){
     if(isLeaf)
         return 0;
     return cardinality(querygraph, left, right) + left->cost(querygraph) + right->cost(querygraph);    
-}
-
-Tree Tree::GOO(QueryGraph& querygraph){
-    std::vector<Tree> trees;
-    
-    for(auto &node : querygraph.getAllNodes()){
-        trees.push_back(Tree(node));
-    }
-
-    while(trees.size() > 1){
-        int minCost = cost(querygraph, &(trees[0]), &(trees[1]));
-        int leftIdx = 0, rightIdx = 1, currentLeftIdx = 0, currentRightIdx = 0;
-        for(auto leftIterator = trees.begin(); leftIterator != trees.end(); ++leftIterator, ++currentLeftIdx){
-            currentRightIdx = 0;
-            for(auto rightIterator = leftIterator + 1; rightIterator != tree.end(); ++rightIterator, ++currentRightIdx){
-                int currentCost = cost(querygraph, leftIterator, rightIterator);
-                if(currentCost < minCost){
-                    minCost = currentCost;
-                    leftIdx = currentLeftIdx;
-                    rightIdx = currentRightIdx;
-                }
-            }
-        }
-	trees.push_back(Tree(querygraph, &(trees[leftidx]), &(trees[rightIdx])));
-        trees.erase(trees.begin() + leftIdx);
-        trees.erase(trees.begin() + rightIdx - 1);
-    }
-    return trees[0];
 }
 
 unique_ptr<Operator> TableScanNode::execute()

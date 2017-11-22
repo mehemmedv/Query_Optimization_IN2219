@@ -2,6 +2,7 @@
 #define H_QueryGraph
 
 #include "SimpleParser.hpp"
+#include "QueryPlan.hpp"
 #include <string>
 #include <unordered_map>
 
@@ -67,6 +68,8 @@ public:
     void unionNodes(int nodeA, int nodeB);
     
     vector<QueryGraph> getConnectedComponents();
+    
+    Tree GOO(QueryGraph &querygraph);
     
     string graphviz();
     

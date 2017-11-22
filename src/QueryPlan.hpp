@@ -1,6 +1,7 @@
 #ifndef H_QueryPlan
 #define H_QueryPlan
 
+#include "QueryGraph.hpp"
 #include "Database.hpp"
 #include "SimpleParser.hpp"
 #include "Register.hpp"
@@ -20,13 +21,11 @@ private:
 public:
     Tree(QueryNode& querynode) : isLeaf(true), node(&querynode), leftTree(NULL), rightTree(NULL){}
     
-    Tree(Tree *leftTree, Tree* rightTree) : isLeaf(false), leftTree(leftTree), rightTree(rightTree){}
+    Tree(Tree* leftTree, Tree* rightTree) : isLeaf(false), leftTree(leftTree), rightTree(rightTree){}
     
     double cardinality(QueryGraph &querygarph, Tree* left = NULL, Tree* right = NULL);
     
     int cost(QueryGraph& querygraph, Tree* left = NULL, Tree* right = NULL);
-    
-    Tree GOO(QueryGraph& querygraph);
 };
 
 struct OperatorNode
