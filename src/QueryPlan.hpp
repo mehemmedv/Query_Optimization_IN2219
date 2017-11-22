@@ -7,11 +7,12 @@
 #include "Register.hpp"
 #include "operator/Tablescan.hpp"
 #include <memory>
+#include <queue>
 #include <unordered_map>
 
 using namespace std;
 
-class Tree{
+class Tree {
 private:
     bool isLeaf;
     QueryNode* node;

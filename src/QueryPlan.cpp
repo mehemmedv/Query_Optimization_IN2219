@@ -1,4 +1,3 @@
-#include "QueryGraph.hpp"
 #include "QueryPlan.hpp"
 #include "operator/CrossProduct.hpp"
 #include "operator/HashJoin.hpp"
@@ -9,12 +8,12 @@ std::vector<QueryNode> Tree::getRelations(Tree* tree){
     std::vector<QueryNode> nodes;
     std::queue<Tree*> trees;
     trees.push(tree);
-    while(!trees.empty()){
+    while(!trees.empty()) {
         Tree* newNode = trees.front();
         trees.pop();
-        if(newNode->isLeaf()){
+        if (newNode->isLeaf) {
             nodes.push_back(newNode->node);
-        } else{
+        } else {
             trees.push(newNode->leftNode);
             trees.push(newNode->rightNode);            
         }

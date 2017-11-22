@@ -247,7 +247,7 @@ QueryGraph QueryGraph::buildMST(){
     return querygraph;      
 }
 
-Tree QueryGraph::GOO(QueryGraph &querygraph){
+Tree GOO(QueryGraph &querygraph){
     std::vector<Tree*> trees;
     
     for(auto &node : getAllNodes()){
