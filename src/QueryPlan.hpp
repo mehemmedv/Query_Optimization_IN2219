@@ -26,7 +26,7 @@ public:
     
     double cardinality(QueryGraph &querygarph, Tree* left = NULL, Tree* right = NULL);
     
-    int cost(QueryGraph& querygraph, Tree* left = NULL, Tree* right = NULL);
+    int cost(QueryGraph& querygraph, Tree *left = NULL, Tree *right = NULL);
 };
 
 struct OperatorNode

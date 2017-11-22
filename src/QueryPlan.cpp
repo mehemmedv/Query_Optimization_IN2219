@@ -12,10 +12,10 @@ std::vector<QueryNode> Tree::getRelations(Tree* tree){
         Tree* newNode = trees.front();
         trees.pop();
         if (newNode->isLeaf) {
-            nodes.push_back(newNode->node);
+            nodes.push_back(*(newNode->node));
         } else {
-            trees.push(newNode->leftNode);
-            trees.push(newNode->rightNode);            
+            trees.push(newNode->leftTree);
+            trees.push(newNode->rightTree);            
         }
     }
     return nodes;
@@ -29,17 +29,20 @@ double Tree::cardinality(QueryGraph &querygraph, Tree* left, Tree* right){
     std::vector<QueryNode> rightRelations = getRelations(right);
     
     for(auto &node : leftRelations){
-        for (auto& edge : querygraph.getEdges(getNode(node))) {
-            int next = edge.other(cur);
-            if(std::find(rightRelations.begin(), rightRelations.end(), querygraphgetNode(next)) != rightRelations.end()){
+        for (auto& edge : querygraph.getEdges(querygraph.getNode(node.index))) {
+            int next = edge.other(node.index);
+            for(auto &rightNode : rightRelations)
+                if(rightNode.index == next)
+                    cardinality *= edge.selectivity;                    
+            /*if(std::find(rightRelations.begin(), rightRelations.end(), querygraph.getNode(next)) != rightRelations.end()){
                 cardinality *= edge.selectivity;
-            }
+            }*/
         }
     }
     return cardinality;
 }
 
-int Tree::cost(QueryGraph& querygraph, Tree* left = NULL, Tree* right = NULL){
+int Tree::cost(QueryGraph& querygraph, Tree *left, Tree *right){
     if(isLeaf)
         return 0;
     return cardinality(querygraph, left, right) + left->cost(querygraph) + right->cost(querygraph);    
