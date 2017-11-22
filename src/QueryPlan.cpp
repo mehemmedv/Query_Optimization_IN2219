@@ -75,7 +75,7 @@ unique_ptr<Operator> HashJoinNode::execute()
 
 void QueryPlan::setRoot(unique_ptr<OperatorNode> root)
 {
-    this->root = root;
+    this->root.reset(root.release());
 }
 
 const Register* QueryPlan::getRegister(const string& bind, const string& attr)

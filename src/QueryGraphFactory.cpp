@@ -60,3 +60,34 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse)
     
     return retval;
 }
+
+Tree GOO(QueryGraph &querygraph){
+    std::vector<Tree*> trees;
+    
+    for(auto &node : querygraph.getAllNodes()){
+        trees.push_back(new Tree(node));
+    }
+
+    while(trees.size() > 1){
+        int minCost = trees[0]->cost(querygraph, trees[0], trees[1]);
+        int leftIdx = 0, rightIdx = 1, currentLeftIdx = 0, currentRightIdx = 0;
+        for(auto leftIterator = trees.begin(); leftIterator != trees.end(); ++leftIterator, ++currentLeftIdx){
+            currentRightIdx = 0;
+            for(auto rightIterator = leftIterator + 1; rightIterator != trees.end(); ++rightIterator, ++currentRightIdx){
+                int currentCost = (*leftIterator)->cost(querygraph, *leftIterator, *rightIterator);
+                if(currentCost < minCost){
+                    minCost = currentCost;
+                    leftIdx = currentLeftIdx;
+                    rightIdx = currentRightIdx;
+                }
+            }
+        }
+	trees.push_back(new Tree(trees[leftIdx], trees[rightIdx]));
+        delete *(trees.begin() + leftIdx);
+        trees.erase(trees.begin() + leftIdx);
+        delete *(trees.begin() + rightIdx - 1);
+        trees.erase(trees.begin() + rightIdx - 1);
+    }
+    return *(trees[0]);
+}
+

@@ -35,7 +35,7 @@ void execute_query(Database& db, string str)
     cout << endl;
     
     QueryGraph querygraph = buildGraphFromParse(db, result);
-    Tree tree = querygraph.GOO();
+    Tree tree = GOO(querygraph);
     
     string graphviz = querygraph.graphviz();
     

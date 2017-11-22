@@ -12,4 +12,6 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse);
 
 QueryPlan simplePlan(QueryGraph& graph);
 
+Tree GOO(QueryGraph &querygraph);
+
 #endif
