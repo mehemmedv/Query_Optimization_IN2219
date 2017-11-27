@@ -37,10 +37,7 @@ double Tree::cardinality(QueryGraph &querygraph, Tree* left, Tree* right){
             int next = edge.other(node.index);
             for(auto &rightNode : rightRelations)
                 if(rightNode.index == next)
-                    cardinality *= edge.selectivity;                    
-            /*if(std::find(rightRelations.begin(), rightRelations.end(), querygraph.getNode(next)) != rightRelations.end()){
-                cardinality *= edge.selectivity;
-            }*/
+                    cardinality *= edge.selectivity;
         }
     }
     return cardinality;
