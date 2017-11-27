@@ -36,6 +36,7 @@ void execute_query(Database& db, string str)
     
     QueryGraph querygraph = buildGraphFromParse(db, result);
     Tree tree = GOO(querygraph);
+    tree.print(querygraph);
     
     string graphviz = querygraph.graphviz();
     

@@ -1,3 +1,4 @@
+#include <string>
 #include "QueryPlan.hpp"
 #include "operator/CrossProduct.hpp"
 #include "operator/HashJoin.hpp"
@@ -24,10 +25,13 @@ std::vector<QueryNode> Tree::getRelations(Tree* tree){
 double Tree::cardinality(QueryGraph &querygraph, Tree* left, Tree* right){
     if(isLeaf)
         return node->cardinality;
-    double cardinality = left->cardinality(querygraph) * right->cardinality(querygraph);
+    if(left == NULL){
+    	left = this->leftTree;
+    	right= this->rightTree;
+    }
+    double cardinality = left->cardinality(querygraph, left->leftTree, left->rightTree) * right->cardinality(querygraph, right->leftTree, right->rightTree);
     std::vector<QueryNode> leftRelations = getRelations(left);
     std::vector<QueryNode> rightRelations = getRelations(right);
-    
     for(auto &node : leftRelations){
         for (auto& edge : querygraph.getEdges(querygraph.getNode(node.index))) {
             int next = edge.other(node.index);
@@ -42,10 +46,53 @@ double Tree::cardinality(QueryGraph &querygraph, Tree* left, Tree* right){
     return cardinality;
 }
 
+void Tree::print_rec(QueryGraph& querygraph){
+    if(isLeaf){
+    	cout<<node->binding.binding.value;
+    	return;
+    }
+    
+    cout<<"(";
+    leftTree->print_rec(querygraph);
+    cout<<") |><| (";
+    rightTree->print_rec(querygraph);
+    cout<<")";
+}
+
+string Tree::print_cost(QueryGraph& querygraph, int &index){
+    if(isLeaf){
+    	return node->binding.binding.value;
+    }
+    
+    int cur_idx = index;
+    string l_idx = leftTree->print_cost(querygraph, ++index);
+    string r_idx = rightTree->print_cost(querygraph, ++index);
+    int cost_join = cost(querygraph, leftTree, rightTree);
+    cout<<"P" + std::to_string(cur_idx)<<" = (";
+    cout<<l_idx;
+    cout<<"|><|";
+    cout<<r_idx;
+    cout<<") "<<cost_join<<endl;
+    return "P" + std::to_string(cur_idx);
+}
+
+void Tree::print(QueryGraph& querygraph){
+    cout<<"Join order: ";
+    print_rec(querygraph);
+    cout<<endl;
+    int index = 1;
+    print_cost(querygraph, index);
+}
+
 int Tree::cost(QueryGraph& querygraph, Tree *left, Tree *right){
     if(isLeaf)
         return 0;
-    return cardinality(querygraph, left, right) + left->cost(querygraph) + right->cost(querygraph);    
+    double car = cardinality(querygraph, left, right);
+    if(left == NULL){
+    	left = this->leftTree;
+    	right = this->rightTree;
+    }
+    return car + left->cost(querygraph) + right->cost(querygraph);    
 }
 
 unique_ptr<Operator> TableScanNode::execute()

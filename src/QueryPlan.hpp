@@ -20,6 +20,7 @@ private:
     std::vector<QueryNode> getRelations(Tree* tree);
 
 public:
+
     Tree(QueryNode& querynode) : isLeaf(true), node(&querynode), leftTree(NULL), rightTree(NULL){}
     
     Tree(Tree* leftTree, Tree* rightTree) : isLeaf(false), leftTree(leftTree), rightTree(rightTree){}
@@ -28,6 +29,11 @@ public:
     
     int cost(QueryGraph& querygraph, Tree *left = NULL, Tree *right = NULL);
     
+    void print(QueryGraph& querygraph);
+    
+    void print_rec(QueryGraph& querygraph);
+    
+    string print_cost(QueryGraph& querygraph, int &index);
 };
 
 struct OperatorNode

@@ -83,11 +83,12 @@ Tree GOO(QueryGraph &querygraph){
             }
         }
 	trees.push_back(new Tree(trees[leftIdx], trees[rightIdx]));
-        delete *(trees.begin() + leftIdx);
+	//delete *(trees.begin() + rightIdx);
+        trees.erase(trees.begin() + rightIdx);
+        //delete *(trees.begin() + leftIdx);
         trees.erase(trees.begin() + leftIdx);
-        delete *(trees.begin() + rightIdx - 1);
-        trees.erase(trees.begin() + rightIdx - 1);
-    }
+    } 
+    
     return *(trees[0]);
 }
 
