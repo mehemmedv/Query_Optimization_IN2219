@@ -29,6 +29,8 @@ class Table
    std::fstream io;
    /// Unwritten changes?
    bool dirty;
+   /// Name
+   std::string name;
 
    friend class Database;
    friend class Tablescan;
@@ -68,6 +70,8 @@ class Table
    const Attribute& getAttribute(unsigned index) const { return attributes[index]; }
    /// Search for a specific attribute
    int findAttribute(const std::string& name);
+   
+   std::string getName() const { return name; }
 };
 //---------------------------------------------------------------------------
 #endif

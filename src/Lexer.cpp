@@ -85,7 +85,7 @@ void Lexer::readNext()
    char oldc = c;
    input.get(c);
    while(!input.eof() && c != terminator && !isspace(c)
-      && (!isalnum(oldc) || isalnum(c)) //isword ==> read alphanum
+      && (!isalnum(oldc) || isalnum(c) || c == '_') //isword ==> read alphanum
       && (!ismultipunct(oldc) || ismultipunct(c)) //ismultipunc ==> read multipunctuation (==)
       && (!issinglepunct(oldc)) //only read single comma
       ) {

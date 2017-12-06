@@ -1,0 +1,85 @@
+customer
+15000
+c_custkey 0 4 15000 1 15000 key
+c_name 3 18 15000 Customer#000000001 Customer#000015000
+c_address 3 25.2365 15000 \s\s\s5L06W67,Mw8G zzxGktzXTMKS1BxZlgQ9nqQ
+c_nationkey 0 4 25 0 24
+c_phone 3 15 15000 10-103-318-6809 34-999-121-7718
+c_acctabl 1 8 14887 -999.95 9999.72
+c_mktsegment 3 9 5 AUTOMOBILE MACHINERY
+c_comment 3 72.7605 15000 \sTiresias\samong\sthe\sboldly\sregular\spinto\sbeans\swake\spending zzle.\sblithely\sregular\sinstructions\scajol
+
+lineitem
+600572
+l_orderkey 0 4 150000 1 600000
+l_partkey 0 4 20000 1 20000
+l_suppkey 0 4 1000 1 1000
+l_linenumber 0 4 7 1 7
+l_quantity 0 4 50 1 50
+l_extendedprice 1 8 122626 901 95949.5
+l_discount 1 8 11 0 0.1
+l_tax 1 8 9 0 0.08
+l_returnflag 3 1 3 A R
+l_linestatus 3 1 2 F O
+l_shipdate 3 10 2525 1992-01-03 1998-12-01
+l_commitdate 3 10 2466 1992-01-31 1998-10-31
+l_recepitdate 3 10 2547 1992-01-04 1998-12-27
+l_shipstruct 3 12 4 COLLECT\sCOD TAKE\sBACK\sRETURN
+l_shipmode 3 4.28571 7 AIR TRUCK
+l_comment 3 27.924 538678 \sTiresias\s zzle:\spending\si
+
+nation
+25
+n_nationkey 0 4 25 0 24 key
+n_name 3 7.08 25 ALGERIA VIETNAM
+n_regionkey 0 4 5 0 4
+n_comment 3 74.28 25 \shaggle.\scarefully\sfinal\sdeposits\sdetect\sslyly\sagai y\sfinal\spackages.\sslow\sfoxes\scajole\squickly.\squickly\ssilent\splatelets\sbreach\sironic\saccounts.\sunusual\spinto\sbe
+
+orders
+150000
+o_orderkey 0 4 150000 1 600000 key
+o_custkey 0 4 10000 1 14999
+o_orderstatus 3 1 3 F P
+o_totalprice 1 8 129030 833.4 479129
+o_orderdate 3 10 2406 1992-01-01 1998-08-02
+o_orderpriority 3 8.4 5 1-URGENT 5-LOW
+o_clerk 3 15 1000 Clerk#000000001 Clerk#000001000
+o_shippingpriority 0 4 1 0 0
+o_comment 3 48.5714 149769 \sTiresias\sabout\sthe\sblithely\sironic\sa zzle.\sslyly\sspecial\splatele
+
+part
+20000
+p_partkey 0 4 20000 1 20000 key
+p_name 3 33.1051 20000 almond\santique\speach\ssnow\smidnight yellow\swhite\stan\skhaki\ssaddle
+p_mfgr 3 14 5 Manufacturer#1 Manufacturer#5
+p_brand 3 8 25 Brand#11 Brand#55
+p_type 3 20.6 150 ECONOMY\sANODIZED\sBRASS STANDARD\sPOLISHED\sTIN
+p_size 0 4 50 1 50
+p_container 3 7.575 40 JUMBO\sBAG WRAP\sPKG
+p_retailprice 1 8 2899 901 1918.99
+p_comment 3 14.2773 17482 \sTiresias\sboost\sa zzle\sfuriously\salong
+
+partsupp
+80000
+ps_partkey 0 4 20000 1 20000
+ps_suppkey 0 4 1000 1 1000
+ps_availqty 0 4 9996 1 9999
+ps_supplycosts 1 8 54983 1.01 999.99
+ps_comment 3 123.482 79991 \sTiresias\shaggle\squickly\supon\sthe\sspecial\sinstructions.\sblithely\spending\splatelets\sacross\sthe\sbold zzle\squickly.\ssilent,\sblithe\srequests\snag\sfuriously\squickly\sfinal\sdependencies.\sregula
+
+region
+5
+r_regionkey 0 4 5 0 4 key
+r_name 3 6.8 5 AFRICA MIDDLE\sEAST
+r_commane 3 66 5 ges.\sthinly\seven\spinto\sbeans\sca uickly\sspecial\saccounts\scajole\scarefully\sblithely\sclose\srequests.\scarefully\sfinal\sasymptotes\shaggle\sfuriousl
+
+supplier
+1000
+s_suppkey 0 4 1000 1 1000 key
+s_name 3 18 1000 Supplier#000000001 Supplier#000001000
+s_address 3 25.207 1000 \s0L8yoIwSCP4EJyESI\s6bVH9k zzfDhdtZcvmVzA8rNFU,Yctj1zBN
+s_nationkey 0 4 25 0 24
+s_phone 3 15 1000 10-108-564-6160 34-998-900-4911
+s_acctbal 1 8 999 -966.2 9993.46
+s_comment 3 62.04 1000 \saccording\sto\sthe\sbravely\squick\sdolphins.\sdeposit ymptotes.\sblithely\sregular\stheodolites\sare\sslyly\saccording\sto\sthe\s
+

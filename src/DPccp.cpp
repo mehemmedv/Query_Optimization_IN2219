@@ -1,7 +1,11 @@
 #include "DPccp.hpp"
 
+#include <bitset>
 #include <functional>
+#include <limits>
 #include "BitSubsets.hpp"
+#include "operator/Operator.hpp"
+#include "operator/Selection.hpp"
 
 typedef uint64_t num_t;
 
@@ -63,16 +67,21 @@ struct dpinfo
     int64_t card;
     num_t prea;
     num_t preb;
+    bool empty;
+    bool used;
     
-    dpinfo() : cout(LLONG_MAX), card(LLONG_MAX), prea(-1), preb(-1) {}
-    dpinfo(int64_t cout, int64_t card, num_t prea, num_t preb) : cout(cout), card(card), prea(prea), preb(preb) {}
+    const static int64_t maxval = numeric_limits<int64_t>::max();
     
-    bool operator<(const dpinfo& other) {
+    dpinfo() : cout(maxval), card(maxval), prea(0), preb(0), empty(true), used(false) {}
+    dpinfo(int64_t cout, int64_t card, num_t prea, num_t preb, bool empty = false) 
+        : cout(cout), card(card), prea(prea), preb(preb), empty(empty), used(true) {}
+    
+    bool operator<(const dpinfo& other) const {
         return card < other.card;
     }
 };
 
-double getS(QueryGraph& graph, vector<int>& bfsid, num_t abfs, num_t bbfs)
+void iterateCrossEdges(QueryGraph& graph, vector<int>& bfsid, num_t abfs, num_t bbfs, function<void(QueryEdge&, int)> foo)
 {
     num_t b = 0;
     
@@ -82,8 +91,6 @@ double getS(QueryGraph& graph, vector<int>& bfsid, num_t abfs, num_t bbfs)
         }
     }
     
-    double result = 1.0;
-    
     for (int i = 0; i < graph.getNodeCount(); i++) {
         if (abfs & (1ull << i)) {
             int ind = bfsid[i];
@@ -91,34 +98,100 @@ double getS(QueryGraph& graph, vector<int>& bfsid, num_t abfs, num_t bbfs)
             for (auto& edg : graph.getEdges(graph.getNode(ind))) {
                 int to = edg.other(ind);
                 if (b & (1ull << to)) {
-                    result *= edg.selectivity;
+                    foo(edg, ind);
                 }
             }
         }
     }
+}
+
+double getS(QueryGraph& graph, vector<int>& bfsid, num_t abfs, num_t bbfs)
+{
+    double result = 1.0;
+    
+    iterateCrossEdges(graph, bfsid, abfs, bbfs, [&](QueryEdge& edg, int from){
+        result *= edg.selectivity;;
+    });
     
     return result;
 }
 
-shared_ptr<OperatorNode> dpBuildOperatorRec(QueryGraph& graph, QueryPlan& plan,
-        unordered_map<string, unique_ptr<Tablescan>> scans, vector<int>& bfsid,
+unique_ptr<OperatorNode> dpBuildOperatorRec(QueryGraph& graph, QueryPlan& plan,
+        unordered_map<string, unique_ptr<Tablescan>>& scans, vector<int>& bfsid,
         vector<dpinfo>& dp, num_t cur)
 {
-    if (dp[cur].prea == -1) {
+    if (dp[cur].empty) {
         auto& node = graph.getNode(bfsid[dp[cur].preb]);
         auto it = scans.find(node.binding.binding.value);
         
         if (it == scans.end()) {
-            throw exception("Binding not found.");
+            throw runtime_error("Binding not found.");
         }
         
-        unique_ptr<Operator> mo(move(it->second));
+        unique_ptr<OperatorNode> mo(new TableScanNode(move(it->second)));
         scans.erase(it);
+        
+        //order?
+        for (auto& pred : node.predicates) {
+            auto regptr = plan.createConstRegister();
+            switch (pred.constant.type) {
+                case Token::Type::tok_lit_bool:
+                    regptr->setBool(pred.constant.boolValue);
+                    break;
+                case Token::Type::tok_lit_dbl:
+                    regptr->setDouble(pred.constant.doubleValue);
+                    break;
+                case Token::Type::tok_lit_int:
+                    regptr->setInt(pred.constant.intValue);
+                    break;
+                case Token::Type::tok_lit_str:
+                    regptr->setString(pred.constant.value);
+                    break;
+                default:
+                    break;
+            }
+            mo.reset(new SelectNode(move(mo), plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value), regptr.get()));
+        }
+        
+        return mo;
     }
+    
+    unique_ptr<OperatorNode> retval;
+    
+    {
+        num_t abfs = dp[cur].prea;
+        num_t bbfs = dp[cur].preb;
+        iterateCrossEdges(graph, bfsid, abfs, bbfs, [&](QueryEdge& edg, int from){
+            for (auto& pred : edg.predicates) {
+                if (!retval) {
+                    unique_ptr<OperatorNode> left = dpBuildOperatorRec(graph, plan, scans, bfsid, dp, dp[cur].prea);
+                    unique_ptr<OperatorNode> right = dpBuildOperatorRec(graph, plan, scans, bfsid, dp, dp[cur].preb);
+                    const Register* lr = plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value);
+                    const Register* rr = plan.getRegister(pred.rhs.binding.value, pred.rhs.attribute.value);
+                    if (pred.lhs.binding.value != graph.getNode(from).binding.binding.value) {
+                        swap(lr, rr);
+                    }
+                    
+                    retval.reset(new HashJoinNode(move(left), move(right), lr, rr));
+                } else {
+                    const Register* lr = plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value);
+                    const Register* rr = plan.getRegister(pred.rhs.binding.value, pred.rhs.attribute.value);
+                    
+                    if (pred.lhs.binding.value != graph.getNode(from).binding.binding.value) {
+                        swap(lr, rr);
+                    }
+                    
+                    retval.reset(new SelectNode(move(retval), lr, rr));
+                }
+            }
+        });
+    }
+    
+    return retval;
 }
 
-shared_ptr<OperatorNode> dpccpPlanConn(QueryGraph& graph, QueryPlan& plan,
-        unordered_map<string, unique_ptr<Tablescan>> scans)
+unique_ptr<OperatorNode> dpccpPlanConn(QueryGraph& graph, QueryPlan& plan,
+        unordered_map<string, unique_ptr<Tablescan>>& scans)
 {
     vector<int> bfsid(graph.getNodeCount());    //bfsid to nodeid
     //vector<int> bfsrid(graph.getNodeCount());   //nodeid to bfsid
@@ -159,22 +232,47 @@ shared_ptr<OperatorNode> dpccpPlanConn(QueryGraph& graph, QueryPlan& plan,
     for (int i = 0; i < graph.getNodeCount(); i++) {
         int cout = 0;
         int card = graph.getNode(bfsid[i]).cardinality;
-        int prea = -1;
-        int preb = -1;
-        dp[1ull << i] = dpinfo(cout, card, prea, preb);
+        dp[1ull << i] = dpinfo(cout, card, 0, i, true);
     }
     
     for (auto a : enumerateCsg(graph, bfsid)) {
         for (auto b : enumerateCmp(graph, bfsid, a)) {
-            dpinfo newinfo;
-            newinfo.card = dp[a].card * dp[b].card * getS(graph, bfsid, a, b);
-            newinfo.cout = newinfo.card + dp[a].cout + dp[b].cout;
-            newinfo.prea = a;
-            newinfo.preb = b;
+            auto selec = getS(graph, bfsid, a, b);
+            int64_t card = max<int64_t>(1, (dp[a].card * dp[b].card) * selec);
+            int64_t cout = card + dp[a].cout + dp[b].cout;
+            num_t prea = a;
+            num_t preb = b;
+            bool empty = false;
+            
+            dpinfo newinfo(card, cout, prea, preb, empty);
             
             dp[a | b] = min(dp[a | b], newinfo);
         }
     }
+    
+    cout << "## DPTABLEBEG ##" << endl;
+    
+    cout << "ind\tbits\tcout\tcard\tleft\tright" << endl;
+    for (int i = 1; i < dp.size(); i++) {
+        if (!dp[i].used) {
+            cout <<"-\t-\t-\t-\t-\t-\t" << endl;
+            continue;
+        }
+        
+        cout << i << "\t";
+        cout << bitset<4>(i) << "\t";
+        cout << dp[i].cout << "\t";
+        cout << dp[i].card << "\t";
+        if (dp[i].empty) {
+            cout << "-\t-\t";
+        } else {
+            cout << dp[i].prea << "\t";
+            cout << dp[i].preb << "\t";
+        }
+        cout << endl;
+    }
+    
+    cout << "## DPTABLEEND ##" << endl;
     
     
     return dpBuildOperatorRec(graph, plan, scans, bfsid, dp, (1ull << graph.getNodeCount()) - 1);
@@ -184,6 +282,21 @@ QueryPlan dpccpPlan(Database& db, QueryGraph& graph)
 {
     auto comp = graph.getConnectedComponents();
     
-    QueryPlan myplan;
-    auto scans = myplan.init(db, graph.getBindings());
+    QueryPlan plan;
+    auto scans = plan.init(db, graph.getBindings());
+    
+    unique_ptr<OperatorNode> root;
+    
+    for (auto& g : comp) {
+        unique_ptr<OperatorNode> cur = dpccpPlanConn(g, plan, scans);
+        if (!root) {
+            root.swap(cur);
+        } else {
+            root.reset(new CrossProductNode(move(root), move(cur)));
+        }
+    }
+    
+    plan.setRoot(move(root));
+    
+    return plan;
 }

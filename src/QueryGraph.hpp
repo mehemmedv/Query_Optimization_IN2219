@@ -2,6 +2,7 @@
 #define H_QueryGraph
 
 #include "SimpleParser.hpp"
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -39,7 +40,7 @@ private:
     vector<QueryNode> nodes;
     vector<QueryEdge> edges;
     vector<unordered_map<int,int>> adjacencyList;  //to, edge_index
-    vector<SqlBinding> bindings;
+    vector<shared_ptr<SqlBinding>> bindings;
     
     int* par; // these 2 are used for MST(union find)
     int* weight;
@@ -52,10 +53,11 @@ public:
     QueryEdge& getEdge(int index);
     
     int getNodeCount() { return nodes.size(); }
+    int getEdgeCount() { return edges.size(); }
     
     vector<QueryNode>& getAllNodes() { return nodes; }
     vector<QueryEdge>& getAllEdges() { return edges; }
-    vector<SqlBinding>& getBindings() { return bindings; }
+    vector<shared_ptr<SqlBinding>>& getBindings() { return bindings; }
     
     void emplaceNode(SqlBinding, vector<SqlPredicate>, int cardinality);
     void emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, const vector<SqlPredicate>&, float selectivity);

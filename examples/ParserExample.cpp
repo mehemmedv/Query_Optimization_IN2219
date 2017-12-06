@@ -1,5 +1,6 @@
 #include "BitSubsets.hpp"
 #include "Database.hpp"
+#include "DPccp.hpp"
 #include "SimpleParser.hpp"
 #include "operator/SqlQuery.hpp"
 #include "operator/Printer.hpp"
@@ -36,13 +37,23 @@ void execute_query(Database& db, string str)
     
     cout << endl;
     
-    string graphviz = buildGraphFromParse(db, result).graphviz();
+    auto graph = buildGraphFromParse(db, result);
+    string graphviz = graph.graphviz();
     cout << "# Query graph in DOT format:" << endl << graphviz << endl << endl;
+    
+    
+    
+    //unique_ptr<SqlQuery> query(new SqlQuery(db, result));
+    auto plan = dpccpPlan(db, graph);
+    
+    cout << "# Plan:" << endl;
+    
+    cout << plan << endl;
     
     cout << "# Results:" << endl;
     
-    unique_ptr<SqlQuery> query(new SqlQuery(db, result));
-    Printer out(move(query));
+    Printer out(plan.execute());
+    //Printer out(move(query));
     
     out.open();
     while (out.next());
@@ -56,15 +67,9 @@ int main()
     Database db;
     db.open("data/uni");
     
-    for (int num : bitsubsets(0b00011010)){
-        cout << bitset<8>(num) << endl;
-    }
     
-    cout << endl;
-    
-    
-    //string sample = "select name, titel from professoren p, vorlesungen v where p.persnr = v.gelesenvon";
-    string sample = "select name from studenten s, hoeren h, vorlesungen v where s.matrnr = h.matrnr and h.vorlnr=v.vorlnr and v.titel='Ethik'\0";
+    string sample = "select * from studenten s1, studenten s2, hoeren h1, hoeren h2 where s1.matrnr = h1.matrnr and s2.matrnr = h2.matrnr and h1.vorlnr = h2.vorlnr and s1.name = 'Schopenhauer'";
+    //string sample = "select name from studenten s, hoeren h, vorlesungen v where s.matrnr = h.matrnr and h.vorlnr=v.vorlnr and v.titel='Ethik'\0";
     cout << "> " << sample << endl;
     execute_query(db, sample);
     

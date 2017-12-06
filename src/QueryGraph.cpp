@@ -29,8 +29,8 @@ void QueryGraph::emplaceNode(SqlBinding binding, vector<SqlPredicate> preds, int
 {
     string bindingstr = binding.binding.value;
     int index = nodes.size();
-    bindings.push_back(move(binding));
-    nodes.push_back(QueryNode{index, cardinality, bindings.back(), move(preds)});
+    bindings.emplace_back(new SqlBinding(move(binding)));
+    nodes.push_back(QueryNode{index, cardinality, *bindings.back(), move(preds)});
     bindingToIndex.emplace(move(bindingstr), index);
     adjacencyList.emplace_back();
 }
@@ -93,12 +93,13 @@ QueryGraph traverse(int start, QueryGraph& original, vector<bool>& vis)
     ms.push(start);
     
     vector<bool> pvis(original.getNodeCount());
+    vector<bool> evis(original.getEdgeCount());
     
-    {
+    /*{
         auto& mn = original.getNode(start);
         pvis[start] = true;
         retval.emplaceNode(mn.binding, mn.predicates, mn.cardinality);
-    }
+    }*/
     
     while(!ms.empty()) {
         int cur = ms.top();
@@ -110,16 +111,27 @@ QueryGraph traverse(int start, QueryGraph& original, vector<bool>& vis)
         }
         vis[cur] = true;
         
+        if (!pvis[cur]) {
+            pvis[cur] = true;
+            retval.emplaceNode(mn.binding, mn.predicates, mn.cardinality);
+        }
+        
         for (auto& edge : original.getEdges(original.getNode(cur))) {
+            if (evis[edge.index]) {
+                continue;
+            }
+            evis[edge.index] = true;
             int next = edge.other(cur);
             ms.push(next);
             
-            if (!pvis[cur]) {
-                pvis[cur] = true;
-                retval.emplaceNode(mn.binding, mn.predicates, mn.cardinality);
+            auto& mt = original.getNode(next);
+            
+            if (!pvis[next]) {
+                pvis[next] = true;
+                retval.emplaceNode(mt.binding, mt.predicates, mt.cardinality);
             }
             retval.emplaceEdge(retval.getNode(mn.binding.binding.value),
-                                retval.getNode(original.getNode(next).binding.binding.value),
+                                retval.getNode(mt.binding.binding.value),
                                 edge.predicates, edge.selectivity);
         }
     }

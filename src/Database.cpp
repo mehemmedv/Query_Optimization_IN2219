@@ -76,6 +76,7 @@ void Database::read()
       Table& table=tables[tableName];
       table.file=baseDir+tableName;
       table.indexFile=baseDir+tableName+".idx";
+      table.name=tableName;
       table.read(in);
    }
 }
@@ -115,6 +116,7 @@ Table& Database::createTable(const std::string& name)
    Table& table=tables[name];
    table.file=tableFile;
    table.indexFile=indexFile;
+   table.name=name;
    dirty=true;
 
    return table;

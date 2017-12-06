@@ -4,6 +4,7 @@
 #include "operator/HashJoin.hpp"
 #include "operator/Selection.hpp"
 #include "operator/Operator.hpp"
+#include "operator/Projection.hpp"
 
 std::vector<QueryNode> Tree::getRelations(Tree* tree){
     std::vector<QueryNode> nodes;
@@ -136,22 +137,71 @@ unique_ptr<Operator> QueryPlan::execute()
     }
 }
 
-unordered_map<string, unique_ptr<Tablescan>> QueryPlan::init(Database& db, const vector<SqlBinding>& bindings)
+unique_ptr<Operator> QueryPlan::execute(const SqlParse& parse)
+{
+    if (!root) {
+        return unique_ptr<Operator>();
+    }
+    
+    vector<const Register*> projection;
+    
+    if (!parse.projection.empty() && parse.projection.begin()->value == "*") {
+        for (const auto& regit : registers) {
+            for (const auto& regit2 : regit.second) {
+                projection.push_back(regit2.second);
+            }
+        }
+    } else {
+        for (const auto& tok : parse.projection) {
+            for (const auto& regit : registers) {
+                auto it = regit.second.find(tok.value);
+                if (it != regit.second.end()) {
+                    projection.push_back(it->second);
+                    break;
+                }
+            }
+        }
+    }
+    
+    return unique_ptr<Operator>(new Projection(root->execute(), projection));
+    
+}
+
+shared_ptr<Register> QueryPlan::createConstRegister()
+{
+    constRegisters.emplace_back(new Register());
+    return constRegisters.back();
+}
+
+unordered_map<string, unique_ptr<Tablescan>> QueryPlan::init(Database& db, const vector<shared_ptr<SqlBinding>>& bindings)
 {
     unordered_map<string, unique_ptr<Tablescan>> retval;    //binding, scan
     
     for (auto& bind : bindings) {
-        Table& mytable = db.getTable(bind.relation.value);
+        Table& mytable = db.getTable(bind->relation.value);
         unique_ptr<Tablescan> myscan(new Tablescan(mytable));
         
         for (int i = 0; i < mytable.getAttributeCount(); i++) {
             const Attribute& attr = mytable.getAttribute(i);
             const Register* reg = myscan->getOutput(attr.getName());
-            registers[bind.binding.value][attr.getName()] = reg;
+            registers[bind->binding.value][attr.getName()] = reg;
         }
         
-        retval.emplace(bind.binding.value, move(myscan));
+        retval.emplace(bind->binding.value, move(myscan));
     }
     
     return retval;
+}
+
+ostream& operator<<(ostream& out, const OperatorNode& node)
+{
+    node.output(out);
+    return out;
+}
+
+ostream& operator<<(ostream& out, const QueryPlan& plan)
+{
+    plan.output(out);
+    out << endl;
+    return out;
 }
