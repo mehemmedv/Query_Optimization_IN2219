@@ -29,7 +29,8 @@ void QueryGraph::emplaceNode(SqlBinding binding, vector<SqlPredicate> preds, int
 {
     string bindingstr = binding.binding.value;
     int index = nodes.size();
-    nodes.push_back(QueryNode{index, cardinality, move(binding), move(preds)});
+    bindings.push_back(move(binding));
+    nodes.push_back(QueryNode{index, cardinality, bindings.back(), move(preds)});
     bindingToIndex.emplace(move(bindingstr), index);
     adjacencyList.emplace_back();
 }

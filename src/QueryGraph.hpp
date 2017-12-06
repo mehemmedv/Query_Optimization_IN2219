@@ -24,7 +24,7 @@ class QueryNode
 public:
     int index;
     int cardinality;
-    SqlBinding binding;
+    SqlBinding& binding;
     vector<SqlPredicate> predicates;
     bool operator==(const QueryNode& a) const
     {
@@ -39,6 +39,7 @@ private:
     vector<QueryNode> nodes;
     vector<QueryEdge> edges;
     vector<unordered_map<int,int>> adjacencyList;  //to, edge_index
+    vector<SqlBinding> bindings;
     
     int* par; // these 2 are used for MST(union find)
     int* weight;
@@ -54,6 +55,7 @@ public:
     
     vector<QueryNode>& getAllNodes() { return nodes; }
     vector<QueryEdge>& getAllEdges() { return edges; }
+    vector<SqlBinding>& getBindings() { return bindings; }
     
     void emplaceNode(SqlBinding, vector<SqlPredicate>, int cardinality);
     void emplaceEdge(const QueryNode& nodeA, const QueryNode& nodeB, const vector<SqlPredicate>&, float selectivity);

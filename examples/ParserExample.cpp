@@ -1,9 +1,12 @@
+#include "BitSubsets.hpp"
 #include "Database.hpp"
 #include "SimpleParser.hpp"
 #include "operator/SqlQuery.hpp"
 #include "operator/Printer.hpp"
 #include "SemanticAnalysis.hpp"
 #include "QueryGraphFactory.hpp"
+
+#include <bitset>
 
 
 using namespace std;
@@ -52,6 +55,12 @@ int main()
 {
     Database db;
     db.open("data/uni");
+    
+    for (int num : bitsubsets(0b00011010)){
+        cout << bitset<8>(num) << endl;
+    }
+    
+    cout << endl;
     
     
     //string sample = "select name, titel from professoren p, vorlesungen v where p.persnr = v.gelesenvon";

@@ -1,6 +1,6 @@
 include src/operator/LocalMakefile
 
-obj:=bin/Database.o bin/Register.o bin/Table.o bin/Attribute.o bin/Lexer.o bin/SimpleParser.o bin/SemanticAnalysis.o bin/QueryPlan.o bin/QueryGraph.o bin/QueryGraphFactory.o $(obj_operator)
+obj:=bin/Database.o bin/Register.o bin/Table.o bin/Attribute.o bin/Lexer.o bin/SimpleParser.o bin/SemanticAnalysis.o bin/QueryPlan.o bin/QueryGraph.o bin/QueryGraphFactory.o bin/DPccp.o $(obj_operator)
 
 bin/admin$(EXEEXT): bin/Admin.o $(obj)
 	$(BUILDEXE)
