@@ -80,11 +80,11 @@ struct SelectNode : OperatorNode
 {
     unique_ptr<OperatorNode> child;
     
-    const Register* regl;
-    const Register* regr;
+    vector<const Register*> regl;
+    vector<const Register*> regr;
     
-    SelectNode(unique_ptr<OperatorNode> child, const Register* regl, const Register* regr) 
-        : child(move(child)), regl(regl), regr(regr) {}
+    SelectNode(unique_ptr<OperatorNode> child, vector<const Register*> regl, vector<const Register*> regr) 
+        : child(move(child)), regl(move(regl)), regr(move(regr)) {}
     
     void output(ostream& out) const { 
         out << "(Select ";
@@ -100,11 +100,11 @@ struct HashJoinNode : OperatorNode
     unique_ptr<OperatorNode> left;
     unique_ptr<OperatorNode> right;
     
-    const Register* regl;
-    const Register* regr;
+    vector<const Register*> regl;
+    vector<const Register*> regr;
     
-    HashJoinNode(unique_ptr<OperatorNode> left, unique_ptr<OperatorNode> right, const Register* regl, const Register* regr) 
-        : left(move(left)), right(move(right)), regl(regl), regr(regr) {}
+    HashJoinNode(unique_ptr<OperatorNode> left, unique_ptr<OperatorNode> right, vector<const Register*> regl, vector<const Register*> regr) 
+        : left(move(left)), right(move(right)), regl(move(regl)), regr(move(regr)) {}
     
     void output(ostream& out) const { 
         out << "(HashJoin ";

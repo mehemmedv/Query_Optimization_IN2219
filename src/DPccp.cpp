@@ -3,7 +3,7 @@
 #include <bitset>
 #include <functional>
 #include <limits>
-#include "BitSubsets.hpp"
+#include "IteratorTools.hpp"
 #include "operator/Operator.hpp"
 #include "operator/Selection.hpp"
 
@@ -131,6 +131,9 @@ unique_ptr<OperatorNode> dpBuildOperatorRec(QueryGraph& graph, QueryPlan& plan,
         unique_ptr<OperatorNode> mo(new TableScanNode(move(it->second)));
         scans.erase(it);
         
+        vector<const Register*> lregs;
+        vector<const Register*> rregs;
+        
         //order?
         for (auto& pred : node.predicates) {
             auto regptr = plan.createConstRegister();
@@ -150,44 +153,38 @@ unique_ptr<OperatorNode> dpBuildOperatorRec(QueryGraph& graph, QueryPlan& plan,
                 default:
                     break;
             }
-            mo.reset(new SelectNode(move(mo), plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value), regptr.get()));
+            lregs.push_back(plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value));
+            rregs.push_back(regptr.get());
         }
+        
+        mo.reset(new SelectNode(move(mo), move(lregs), move(rregs)));
         
         return mo;
     }
     
-    unique_ptr<OperatorNode> retval;
+    num_t abfs = dp[cur].prea;
+    num_t bbfs = dp[cur].preb;
     
-    {
-        num_t abfs = dp[cur].prea;
-        num_t bbfs = dp[cur].preb;
-        iterateCrossEdges(graph, bfsid, abfs, bbfs, [&](QueryEdge& edg, int from){
-            for (auto& pred : edg.predicates) {
-                if (!retval) {
-                    unique_ptr<OperatorNode> left = dpBuildOperatorRec(graph, plan, scans, bfsid, dp, dp[cur].prea);
-                    unique_ptr<OperatorNode> right = dpBuildOperatorRec(graph, plan, scans, bfsid, dp, dp[cur].preb);
-                    const Register* lr = plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value);
-                    const Register* rr = plan.getRegister(pred.rhs.binding.value, pred.rhs.attribute.value);
-                    if (pred.lhs.binding.value != graph.getNode(from).binding.binding.value) {
-                        swap(lr, rr);
-                    }
-                    
-                    retval.reset(new HashJoinNode(move(left), move(right), lr, rr));
-                } else {
-                    const Register* lr = plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value);
-                    const Register* rr = plan.getRegister(pred.rhs.binding.value, pred.rhs.attribute.value);
-                    
-                    if (pred.lhs.binding.value != graph.getNode(from).binding.binding.value) {
-                        swap(lr, rr);
-                    }
-                    
-                    retval.reset(new SelectNode(move(retval), lr, rr));
-                }
+    vector<const Register*> lregs;
+    vector<const Register*> rregs;
+    
+    unique_ptr<OperatorNode> left = dpBuildOperatorRec(graph, plan, scans, bfsid, dp, dp[cur].prea);
+    unique_ptr<OperatorNode> right = dpBuildOperatorRec(graph, plan, scans, bfsid, dp, dp[cur].preb);
+    
+    iterateCrossEdges(graph, bfsid, abfs, bbfs, [&](QueryEdge& edg, int from){
+        for (auto& pred : edg.predicates) {
+            const Register* lr = plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value);
+            const Register* rr = plan.getRegister(pred.rhs.binding.value, pred.rhs.attribute.value);
+            if (pred.lhs.binding.value != graph.getNode(from).binding.binding.value) {
+                swap(lr, rr);
             }
-        });
-    }
+            
+            lregs.push_back(lr);
+            rregs.push_back(rr);
+        }
+    });
     
-    return retval;
+    return unique_ptr<OperatorNode>(new HashJoinNode(move(left), move(right), move(lregs), move(rregs)));
 }
 
 unique_ptr<OperatorNode> dpccpPlanConn(QueryGraph& graph, QueryPlan& plan,

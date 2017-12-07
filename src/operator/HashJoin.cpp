@@ -1,9 +1,19 @@
 #include "operator/HashJoin.hpp"
+#include "IteratorTools.hpp"
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
 HashJoin::HashJoin(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,const Register* leftValue,const Register* rightValue)
-   : left(move(left)),right(move(right)),leftValue(leftValue),rightValue(rightValue)
+   : left(move(left)),right(move(right)),leftValues({leftValue}),rightValues({rightValue})
+   // Constructor
+{
+   vector<const Register*> lr(this->left->getOutput());
+   for (auto iter=lr.begin(),limit=lr.end();iter!=limit;++iter)
+      leftRegs.push_back(const_cast<Register*>(*iter));
+}
+//---------------------------------------------------------------------------
+HashJoin::HashJoin(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,vector<const Register*> leftValues,vector<const Register*> rightValues)
+   : left(move(left)),right(move(right)),leftValues(move(leftValues)),rightValues(move(rightValues))
    // Constructor
 {
    vector<const Register*> lr(this->left->getOutput());
@@ -24,6 +34,21 @@ void HashJoin::open()
    table.clear();
 }
 //---------------------------------------------------------------------------
+vector<Register> getRegisterVector(const vector<const Register*>& vec)
+{
+   vector<Register> retval;
+   for (auto rp : vec) {
+      if (rp) {
+         retval.push_back(*rp);
+      } else {
+         Register nullreg;
+         nullreg.setUnbound();
+         retval.push_back(nullreg);
+      }
+   }
+   return retval;
+}
+//---------------------------------------------------------------------------
 bool HashJoin::next()
    // Get the next tuple
 {
@@ -34,7 +59,8 @@ bool HashJoin::next()
          values.reserve(leftRegs.size());
          for (auto iter=leftRegs.begin(),limit=leftRegs.end();iter!=limit;++iter)
             values.push_back(**iter);
-         table.insert(make_pair(*leftValue,move(values)));
+         auto lvals = getRegisterVector(leftValues);
+         table.emplace(lvals,move(values));
       }
       if (table.empty()) return false;
       iter=iterLimit=table.end();
@@ -57,7 +83,8 @@ bool HashJoin::next()
          return false;
       }
       // Probe the hash table
-      auto range=table.equal_range(*rightValue);
+      auto rvals = getRegisterVector(rightValues);
+      auto range=table.equal_range(rvals);
       iter=range.first; iterLimit=range.second;
    }
 }

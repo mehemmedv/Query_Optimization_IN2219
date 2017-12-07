@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 #include "operator/Operator.hpp"
 #include <memory>
+#include <vector>
 //---------------------------------------------------------------------------
 /// A selection
 class Selection : public Operator
@@ -11,15 +12,21 @@ class Selection : public Operator
    /// The input
    std::unique_ptr<Operator> input;
    /// Registers of the condition
-   const Register* condition;
+   std::vector<const Register*> conditions;
    /// Second register for implicit equal tests
-   const Register* equal;
+   std::vector<const Register*> equals;
 
    public:
    /// Constructor. Condition must be a bool value
    Selection(std::unique_ptr<Operator>&& input,const Register* condition);
    /// Constructor. Registers a and b are compared
    Selection(std::unique_ptr<Operator>&& input,const Register* a,const Register* b);
+   
+   /// Constructor. Condition must be a bool value
+   Selection(std::unique_ptr<Operator>&& input,std::vector<const Register*> conditions);
+   /// Constructor. Registers a and b are compared
+   Selection(std::unique_ptr<Operator>&& input,std::vector<const Register*> as,std::vector<const Register*> bs);
+   
    /// Destructor
    ~Selection();
 

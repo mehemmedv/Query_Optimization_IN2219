@@ -1,16 +1,29 @@
 #include "operator/Selection.hpp"
 #include "Register.hpp"
+#include "IteratorTools.hpp"
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
 Selection::Selection(unique_ptr<Operator>&& input,const Register* condition)
-   : input(move(input)),condition(condition),equal(0)
+   : input(move(input)),conditions({condition}),equals({NULL})
    // Constructor
 {
 }
 //---------------------------------------------------------------------------
 Selection::Selection(unique_ptr<Operator>&& input,const Register* a,const Register* b)
-   : input(move(input)),condition(a),equal(b)
+   : input(move(input)),conditions({a}),equals({b})
+   // Constructor
+{
+}
+//---------------------------------------------------------------------------
+Selection::Selection(unique_ptr<Operator>&& input,vector<const Register*> conditions)
+   : input(move(input)),conditions(move(conditions)),equals(conditions.size(), NULL)
+   // Constructor
+{
+}
+//---------------------------------------------------------------------------
+Selection::Selection(unique_ptr<Operator>&& input,vector<const Register*> as,vector<const Register*> bs)
+   : input(move(input)),conditions(move(as)),equals(move(bs))
    // Constructor
 {
 }
@@ -34,17 +47,27 @@ bool Selection::next()
       if (!input->next())
          return false;
       // Check
-      if (equal) {
-         if (condition->getState()==equal->getState()) switch (condition->getState()) {
-            case Register::State::Unbound: break;
-            case Register::State::Int: if (condition->getInt()==equal->getInt()) return true; break;
-            case Register::State::Double: if (condition->getDouble()==equal->getDouble()) return true; break;
-            case Register::State::Bool: if (condition->getBool()==equal->getBool()) return true; break;
-            case Register::State::String: if (condition->getString()==equal->getString()) return true; break;
+      
+      bool truth = true;
+      for (auto zippair : Zip<const Register*>(conditions, equals)) {
+         auto& condition = zippair.first;
+         auto& equal = zippair.second;
+         
+         if (equal) {
+            if (condition->getState()==equal->getState()) switch (condition->getState()) {
+               case Register::State::Unbound: break;
+               case Register::State::Int: truth = truth && (condition->getInt()==equal->getInt()); break;
+               case Register::State::Double: truth = truth && (condition->getDouble()==equal->getDouble()); break;
+               case Register::State::Bool: truth = truth && (condition->getBool()==equal->getBool()); break;
+               case Register::State::String: truth = truth && (condition->getString()==equal->getString()); break;
+            }
+         } else {
+            truth = truth && ((condition->getState()==Register::State::Bool)&&(condition->getBool()));
          }
-      } else {
-         if ((condition->getState()==Register::State::Bool)&&(condition->getBool()))
-            return true;
+      }
+      
+      if (truth) {
+         return true;
       }
    }
 }
