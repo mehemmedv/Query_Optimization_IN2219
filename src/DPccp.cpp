@@ -157,7 +157,9 @@ unique_ptr<OperatorNode> dpBuildOperatorRec(QueryGraph& graph, QueryPlan& plan,
             rregs.push_back(regptr.get());
         }
         
-        mo.reset(new SelectNode(move(mo), move(lregs), move(rregs)));
+        if (!lregs.empty() && !rregs.empty()) {
+            mo.reset(new SelectNode(move(mo), move(lregs), move(rregs)));
+        }
         
         return mo;
     }
