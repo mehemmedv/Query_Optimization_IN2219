@@ -43,7 +43,7 @@ void execute_query(Database& db, string str)
     
     
     
-    unique_ptr<SqlQuery> query(new SqlQuery(db, result));
+    //unique_ptr<SqlQuery> query(new SqlQuery(db, result));
     auto plan = dpccpPlan(db, graph);
     
     cout << "# Plan:" << endl;
