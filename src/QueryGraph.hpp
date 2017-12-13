@@ -2,6 +2,7 @@
 #define H_QueryGraph
 
 #include "SimpleParser.hpp"
+#include "IteratorTools.hpp"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -41,6 +42,7 @@ private:
     vector<QueryEdge> edges;
     vector<unordered_map<int,int>> adjacencyList;  //to, edge_index
     vector<shared_ptr<SqlBinding>> bindings;
+    void topoSortRec(vector<int>& retval, int cur);
     
     int* par; // these 2 are used for MST(union find)
     int* weight;
@@ -66,6 +68,11 @@ public:
     
     bool operator()(const QueryEdge& l, const QueryEdge& r);
     
+    vector<int> topoSort();
+    
+    typedef uint64_t num_t;
+    double getSelectivity(num_t ba, num_t bb);
+    
     QueryGraph buildMST();
     int find(int node);
     void unionNodes(int nodeA, int nodeB);
@@ -77,33 +84,49 @@ public:
     class EdgeIterable
     {
     private:
-        const unordered_map<int,int>& indices;
-        vector<QueryEdge>& edges;
+        int node_index;
+        QueryGraph* g;
     public:
-        EdgeIterable(unordered_map<int,int>& indices, vector<QueryEdge>& edges)
-            : indices(indices), edges(edges) {}
+        typedef QueryEdge& value_type;
+        EdgeIterable(int node_index, QueryGraph* g)
+            : node_index(node_index), g(g) {}
         
-        class EdgeIterator
+        class iterator
         {
         private:
             unordered_map<int,int>::const_iterator cur;
-            vector<QueryEdge>& edges;
+            QueryGraph* g;
         public:
-            EdgeIterator(vector<QueryEdge>& edges, unordered_map<int,int>::const_iterator beg) 
-                : cur(beg), edges(edges) {}
+            iterator(QueryGraph* g, unordered_map<int,int>::const_iterator beg) 
+                : cur(beg), g(g) {}
             
-            EdgeIterator& operator++() { cur++; return *this; }
+            iterator& operator++() { cur++; return *this; }
             
-            bool operator==(const EdgeIterator& other) { return cur == other.cur; }
-            bool operator!=(const EdgeIterator& other) { return cur != other.cur; }
-            QueryEdge& operator*() { return edges[cur->second]; }
+            bool operator==(const iterator& other) const { return cur == other.cur; }
+            bool operator!=(const iterator& other) const { return cur != other.cur; }
+            QueryEdge& operator*() { return g->edges[cur->second]; }
         };
         
-        EdgeIterator begin() { return EdgeIterator(edges, indices.begin()); }
-        EdgeIterator end() { return EdgeIterator(edges, indices.end()); }
+        iterator begin() { return iterator(g, g->adjacencyList[node_index].begin()); }
+        iterator end() { return iterator(g, g->adjacencyList[node_index].end()); }
     };
     
-    EdgeIterable getEdges(const QueryNode& node) { return EdgeIterable(adjacencyList[node.index], edges); };
+    EdgeIterable getEdges(const QueryNode& node) { return EdgeIterable(node.index, this); };
+    
+    
+    
+    auto iterateCrossEdges(num_t ba, num_t bb) {
+        auto mr = makeRange(0, this->getNodeCount());
+        auto ls = makeFilter(mr, FFL([&](int i) -> bool {
+            return ba & (1ull << i);
+        }));
+        auto rs = FFL([&](int i) -> auto {
+            auto edgs = makeReferenceIterable(this->getEdges(this->getNode(i)));
+            auto filt = makeFilter(edgs, FFL([&](QueryEdge& edg){ int to = edg.other(i); return bb & (1ull << to); }));
+            return make_pair(filt.begin(), filt.end());
+        });
+        return makeCross(ls, rs);
+    }
 };
 
 #endif

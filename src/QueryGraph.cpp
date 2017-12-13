@@ -4,6 +4,7 @@
 #include <stack>
 #include <stdexcept>
 #include <algorithm>
+#include "IteratorTools.hpp"
     
 QueryNode& QueryGraph::getNode(const string& binding)
 {
@@ -259,3 +260,43 @@ QueryGraph QueryGraph::buildMST(){
     
     return querygraph;      
 }
+
+void QueryGraph::topoSortRec(vector<int>& retval, int cur) {
+    for (auto& edg : this->getEdges(this->getNode(cur))) {
+        int to = edg.other(cur);
+        topoSortRec(retval, to);
+    }
+    retval.push_back(cur);
+}
+
+vector<int> QueryGraph::topoSort() 
+{
+    vector<int> retval;
+    topoSortRec(retval, 0);
+    return retval;
+}
+
+double QueryGraph::getSelectivity(num_t ba, num_t bb)
+{
+    double retval = 1.0;
+    /*for (int i = 0; i < getNodeCount(); i++) {
+        if (ba & (1ull << i)) {
+            
+            for (auto& edg : getEdges(getNode(i))) {
+                int to = edg.other(i);
+                if (bb & (1ull << to)) {
+                    retval *= edg.selectivity;
+                }
+            }
+        }
+    }*/
+    
+    for (const auto& mp : iterateCrossEdges(ba, bb)) {
+        retval *= mp.second.selectivity;
+    }
+    
+    return retval;
+}
+
+
+

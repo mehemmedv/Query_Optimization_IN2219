@@ -49,7 +49,7 @@ bool Selection::next()
       // Check
       
       bool truth = true;
-      for (auto zippair : Zip<const Register*>(conditions, equals)) {
+      for (auto zippair : makeZip(conditions, equals)) {
          auto& condition = zippair.first;
          auto& equal = zippair.second;
          
