@@ -137,7 +137,7 @@ public:
         F foo;
         
     public:
-        typedef value_type value_type;
+        typedef pair<T1v,T2v> value_type;
         iterator(T1iter it1p, T1iter it1endp, pair<T2iter, T2iter> mp, F foo) 
             : it1(move(it1p)), it1end(move(it1endp)), it2(move(mp.first)), it2end(move(mp.second)), foo(foo) 
         {
@@ -255,7 +255,7 @@ public:
         F foo;
         
     public:
-        typedef value_type value_type;
+        typedef T value_type;
         iterator(Citer itp, Citer itendp, F foo) : it(move(itp)), itend(move(itendp)), foo(foo) {
             while (true) {
                 bool p1 = it == itend;
