@@ -138,8 +138,8 @@ public:
         
     public:
         typedef value_type value_type;
-        iterator(T1iter it1, T1iter it1end, pair<T2iter, T2iter> mp, F foo) 
-            : it1(move(it1)), it1end(move(it1end)), it2(move(mp.first)), it2end(move(mp.second)), foo(foo) 
+        iterator(T1iter it1p, T1iter it1endp, pair<T2iter, T2iter> mp, F foo) 
+            : it1(move(it1p)), it1end(move(it1endp)), it2(move(mp.first)), it2end(move(mp.second)), foo(foo) 
         {
             while (it1 != it1end && it2 == it2end) {
                 if (it1 != it1end) {

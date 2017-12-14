@@ -39,6 +39,11 @@ void execute_query(Database& db, string str)
     cout << endl;
     
     auto graph = buildGraphFromParse(db, result);
+    
+    for (auto mp : graph.iterateCrossEdges(1, 4)) {
+        cout << mp.first << endl;
+    }
+    
     string graphviz = graph.graphviz();
     cout << "# Query graph in DOT format:" << endl << graphviz << endl << endl;
     

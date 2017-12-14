@@ -121,11 +121,19 @@ public:
             return ba & (1ull << i);
         });
         
-        auto rs = [this, bb](int i) -> auto {
+        auto lsv = toVector(ls);
+        
+        auto rs = [this, ba, bb](int i) -> auto {
             auto filt = makeFilter(makeReferenceIterable(this->getEdges(this->getNode(i))), [bb, i](QueryEdge& edg) -> bool { 
                 int to = edg.other(i); 
                 return bb & (1ull << to); 
             });
+            
+            auto rsv = toVector(makeMap(filt, [](QueryEdge& edg){
+                return make_pair(edg.nodeA, edg.nodeB);
+            }));
+            
+            int sz = rsv.size();
             
             return make_pair(filt.begin(), filt.end());
         };

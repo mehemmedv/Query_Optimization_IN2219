@@ -39,9 +39,9 @@ class ExhaustiveTransformation2 {
         bool isLeaf() const { return type < 0; }
         int getLeafInd() const { return -type - 1; }
         
-        bool isComm() const { return type & 1; }
-        bool isRightAssoc() const { return type & 2; }
-        bool isLeftAssoc() const { return type & 4; }
+        bool isComm() const { return !(type & 1); }
+        bool isRightAssoc() const { return !(type & 2); }
+        bool isLeftAssoc() const { return !(type & 4); }
         
         void disableComm() { type = type | 1; }
         void disableRightAssoc() { type = type | 2; }
@@ -111,6 +111,9 @@ class ExhaustiveTransformation2 {
         //right assoc
         if (tree.isRightAssoc()) {
             for (auto st : makeChain(unexplored[tree.left], explored[tree.left])) {
+                if (st.isLeaf()) {
+                    continue;
+                }
                 auto c1 = st.left;
                 auto c2 = st.right;
                 auto c3 = tree.right;
@@ -131,6 +134,9 @@ class ExhaustiveTransformation2 {
         //left assoc
         if (tree.isLeftAssoc()) {
             for (auto st : makeChain(unexplored[tree.right], explored[tree.right])) {
+                if (st.isLeaf()) {
+                    continue;
+                }
                 auto c1 = tree.left;
                 auto c2 = st.left;
                 auto c3 = st.right;
