@@ -261,18 +261,23 @@ QueryGraph QueryGraph::buildMST(){
     return querygraph;      
 }
 
-void QueryGraph::topoSortRec(vector<int>& retval, int cur) {
+void QueryGraph::topoSortRec(vector<int>& retval, vector<bool>& vis, int cur) {
+    if (vis[cur]) {
+        return;
+    }
+    vis[cur] = true;
     for (auto& edg : this->getEdges(this->getNode(cur))) {
         int to = edg.other(cur);
-        topoSortRec(retval, to);
+        topoSortRec(retval, vis, to);
     }
     retval.push_back(cur);
 }
 
 vector<int> QueryGraph::topoSort() 
 {
+    vector<bool> vis(getNodeCount());
     vector<int> retval;
-    topoSortRec(retval, 0);
+    topoSortRec(retval, vis, 0);
     return retval;
 }
 

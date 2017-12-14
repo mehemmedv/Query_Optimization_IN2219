@@ -6,6 +6,7 @@
 #include "operator/Printer.hpp"
 #include "SemanticAnalysis.hpp"
 #include "QueryGraphFactory.hpp"
+#include "ExhaustiveTransformation2.hpp"
 
 #include <bitset>
 
@@ -44,7 +45,8 @@ void execute_query(Database& db, string str)
     
     
     //unique_ptr<SqlQuery> query(new SqlQuery(db, result));
-    auto plan = dpccpPlan(db, graph);
+    //auto plan = dpccpPlan(db, graph);
+    auto plan = exhaustiveTransformation2Plan(db, graph);
     
     cout << "# Plan:" << endl;
     

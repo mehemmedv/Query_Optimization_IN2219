@@ -6,6 +6,7 @@
 #include <memory>
 #include <functional>
 #include <type_traits>
+#include <iostream>
 
 using namespace std;
 
@@ -113,12 +114,11 @@ public:
 template<typename T1, typename T2>
 inline Zip<T1,T2> makeZip(T1 t1, T2 t2) {return Zip<T1, T2>(move(t1), move(t2)); }
 
-template<typename T1, typename F>
+template<typename T1, typename F, typename ret_pair>
 class Cross
 {
     typedef typename T1::iterator T1iter;
     typedef typename T1::value_type T1v;
-    typedef typename F::result_type ret_pair;
     typedef typename ret_pair::first_type T2iter;
     typedef typename T2iter::value_type T2v;
     
@@ -137,17 +137,36 @@ public:
         F foo;
         
     public:
+        typedef value_type value_type;
         iterator(T1iter it1, T1iter it1end, pair<T2iter, T2iter> mp, F foo) 
-            : it1(move(it1)), it1end(move(it1end)), it2(move(mp.first)), it2end(move(mp.second)), foo(foo) {}
+            : it1(move(it1)), it1end(move(it1end)), it2(move(mp.first)), it2end(move(mp.second)), foo(foo) 
+        {
+            while (it1 != it1end && it2 == it2end) {
+                if (it1 != it1end) {
+                    ++it1;
+                }
+                if (it1 != it1end) {
+                    auto mp = foo(*it1);
+                    new (&it2) T2iter(mp.first);
+                    new (&it2end) T2iter(mp.second);
+                    //it2 = mp.first;
+                    //it2end = mp.second;
+                }
+            }
+        }
         
         void operator++() {
             ++it2;
-            if (it2 == it2end) {
-                ++it1;
+            while (it1 != it1end && it2 == it2end) {
+                if (it1 != it1end) {
+                    ++it1;
+                }
                 if (it1 != it1end) {
                     auto mp = foo(*it1);
-                    it2 = move(mp.first);
-                    it2end = move(mp.second);
+                    new (&it2) T2iter(mp.first);
+                    new (&it2end) T2iter(mp.second);
+                    //it2 = mp.first;
+                    //it2end = mp.second;
                 }
             }
         }
@@ -161,8 +180,8 @@ public:
             return !operator==(other);
         }
         
-        auto operator*() {
-            return make_pair(*it1, *it2);
+        value_type operator*() {
+            return value_type(*it1, *it2);
         }
     };
     
@@ -171,7 +190,7 @@ public:
 };
 
 template<typename T1, typename F>
-inline Cross<T1, F> makeCross(T1 t1, F foo) { return Cross<T1, F>(move(t1), foo); }
+inline auto makeCross(T1 t1, F foo) { return Cross<T1, F, decltype(foo(*t1.begin()))>(move(t1), foo); }
 
 
 template<typename C>
@@ -198,7 +217,7 @@ public:
         void operator++() { if (it1 != it1end) it1++; else it2++; }
         
         inline bool operator==(const iterator& other) const {
-            return it1 == other.it1 || it2 == other.it2;
+            return it2 == other.it2;
         }
         
         inline bool operator!=(const iterator& other) const {
@@ -226,7 +245,9 @@ class Filter {
     F foo;
 public:
     typedef T value_type;
-    Filter(C cont, F foo) : cont(cont), foo(foo) {}
+    Filter(C cont, F foo) : cont(cont), foo(foo) {
+        
+    }
     
     class iterator {
         Citer it;
@@ -235,7 +256,15 @@ public:
         
     public:
         typedef value_type value_type;
-        iterator(Citer it, Citer itend, F foo) : it(move(it)), itend(move(itend)), foo(foo) {}
+        iterator(Citer itp, Citer itendp, F foo) : it(move(itp)), itend(move(itendp)), foo(foo) {
+            while (true) {
+                bool p1 = it == itend;
+                if (p1) break;
+                bool p2 = foo(*it) == true;
+                if (p2) break;
+                ++it;
+            }
+        }
         
         void operator++() { 
             ++it;
@@ -252,18 +281,18 @@ public:
         bool operator!=(const iterator& other) const { return it != other.it; }
     };
     
-    iterator begin() const { return iterator(cont.begin(), cont.end(), foo); }
-    iterator end() const { return iterator(cont.end(), cont.end(), foo); }
+    iterator begin() { return iterator(cont.begin(), cont.end(), foo); }
+    iterator end() { return iterator(cont.end(), cont.end(), foo); }
 };
 
 template<typename C, typename F>
 Filter<C,F> makeFilter(C cont, F foo) { return Filter<C,F>(move(cont), foo); }
 
-template<typename C, typename F>
+template<typename C, typename F, typename R>
 class Map {
     typedef typename C::value_type T;
     typedef typename C::iterator Titer;
-    typedef typename F::result_type R;
+    //typedef typename F::result_type R;
     
     
     C cont;
@@ -280,7 +309,7 @@ public:
     public:
         iterator(Titer it, F foo) : it(move(it)), foo(foo), cache(NULL) {}
         
-        void operator++() { it++; cache.reset(); }
+        void operator++() { ++it; cache.reset(); }
         
         R operator*() {
             if (!cache) {
@@ -293,12 +322,12 @@ public:
         bool operator!=(const iterator& other) const { return it != other.it; }
     };
     
-    iterator begin() const { return iterator(cont.begin(), foo); }
-    iterator end() const { return iterator(cont.end(), foo); }
+    iterator begin() { return iterator(cont.begin(), foo); }
+    iterator end() { return iterator(cont.end(), foo); }
 };
 
 template<typename C, typename F>
-Map<C,F> makeMap(C cont, F foo) { return Map<C,F>(move(cont), foo); }
+auto makeMap(C cont, F foo) { return Map<C,F,decltype(foo(*cont.begin()))>(move(cont), foo); }
 
 template<typename T>
 class Range 
@@ -346,7 +375,7 @@ public:
     {
         Citer it;
     public:
-        iterator(Citer it) : it(move(it)) {}
+        iterator(Citer it) : it(it) {}
         void operator++() { ++it; }
         bool operator==(const iterator& other) const { return it == other.it; }
         bool operator!=(const iterator& other) const { return it != other.it; }
@@ -363,13 +392,22 @@ ReferenceIterable<C> makeReferenceIterable(C& cont) { return ReferenceIterable<C
 template<typename C>
 ReferenceIterable<C> makeReferenceIterable(C&& cont) { return ReferenceIterable<C>(move(cont)); }
 
-template <typename T, typename R=typename T::value_type>
-vector<R> toVector(const T& cont) { 
+template <typename T>
+auto toVector(T cont) -> vector<typename T::value_type> { 
+    typedef typename T::value_type R;
     vector<R> retval;
     for (auto val : cont) {
-        retval.push_back(val);
+        retval.emplace_back(move(val));
     }
     return retval;
+}
+
+template <typename T>
+void testIter(T cont) { 
+    typedef typename T::value_type R;
+    for (auto val : cont) {
+        cout << "ITER" << endl;
+    }
 }
 
 

@@ -42,7 +42,7 @@ private:
     vector<QueryEdge> edges;
     vector<unordered_map<int,int>> adjacencyList;  //to, edge_index
     vector<shared_ptr<SqlBinding>> bindings;
-    void topoSortRec(vector<int>& retval, int cur);
+    void topoSortRec(vector<int>& retval, vector<bool>& vis, int cur);
     
     int* par; // these 2 are used for MST(union find)
     int* weight;
@@ -117,14 +117,19 @@ public:
     
     auto iterateCrossEdges(num_t ba, num_t bb) {
         auto mr = makeRange(0, this->getNodeCount());
-        auto ls = makeFilter(mr, FFL([&](int i) -> bool {
+        auto ls = makeFilter(mr, [ba](int i) -> bool {
             return ba & (1ull << i);
-        }));
-        auto rs = FFL([&](int i) -> auto {
-            auto edgs = makeReferenceIterable(this->getEdges(this->getNode(i)));
-            auto filt = makeFilter(edgs, FFL([&](QueryEdge& edg){ int to = edg.other(i); return bb & (1ull << to); }));
-            return make_pair(filt.begin(), filt.end());
         });
+        
+        auto rs = [this, bb](int i) -> auto {
+            auto filt = makeFilter(makeReferenceIterable(this->getEdges(this->getNode(i))), [bb, i](QueryEdge& edg) -> bool { 
+                int to = edg.other(i); 
+                return bb & (1ull << to); 
+            });
+            
+            return make_pair(filt.begin(), filt.end());
+        };
+        
         return makeCross(ls, rs);
     }
 };

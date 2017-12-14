@@ -23,7 +23,7 @@ inline void hash_combine(uint64_t& seed, uint64_t val)
     seed = b * kMul;
 }
 
-class ExhaustiveTransformation {
+class ExhaustiveTransformation2 {
     public:
     struct SubTree {
         num_t left;
@@ -69,7 +69,7 @@ class ExhaustiveTransformation {
     };
     
 	struct SubtreeHash {
-		size_t operator()(const ExhaustiveTransformation::SubTree& t) const
+		size_t operator()(const SubTree& t) const
 		{
 			return t.hash();
 		}
@@ -175,7 +175,21 @@ class ExhaustiveTransformation {
         }
     }
     
-    void findBests() {
+    public:
+    //g must be connected
+    ExhaustiveTransformation2(QueryGraph& g) 
+        : g(g), full((1ull << g.getNodeCount()) - 1), unexplored(1ull << g.getNodeCount()), explored(1ull << g.getNodeCount()) 
+    {
+        vector<int> topo = g.topoSort();
+        for (int i = 0; i < g.getNodeCount(); i++) {
+            auto ml = SubTree::makeLeaf(i);
+            explored[ml.getClass()].insert(ml);
+        }
+        initFromTopo(topo);
+    }
+    
+    vector<SubTree> getBests() {
+        exploreClass(full);
         vector<SubTree> bestres(full + 1);
         vector<int64_t> bestcosts(full + 1, numeric_limits<int64_t>::max());
         vector<int64_t> bestcards(full + 1, 0);
@@ -201,24 +215,117 @@ class ExhaustiveTransformation {
                 }
             }
         }
-    }
-    
-    public:
-    //g must be connected
-    ExhaustiveTransformation(QueryGraph& g) 
-        : g(g), full((1ull << g.getNodeCount()) - 1), unexplored(1ull << g.getNodeCount()), explored(1ull << g.getNodeCount()) 
-    {
-        vector<int> topo = g.topoSort();
-        for (int i = 0; i < g.getNodeCount(); i++) {
-            auto ml = SubTree::makeLeaf(i);
-            explored[ml.getClass()].insert(ml);
-        }
-        initFromTopo(topo);
-    }
-    
-    void getTree() {
-        exploreClass(full);
+        
+        return bestres;
     }
     
 };
 
+typedef uint64_t num_t;
+
+unique_ptr<OperatorNode> exhaustiveTransformation2PlanRec(QueryGraph& graph, QueryPlan& plan,
+        unordered_map<string, unique_ptr<Tablescan>>& scans, vector<ExhaustiveTransformation2::SubTree>& bests, num_t cur) 
+{
+    auto cstree = bests[cur];
+    if (cstree.isLeaf()) {
+        auto& node = graph.getNode(cstree.getLeafInd());
+        auto it = scans.find(node.binding.binding.value);
+        
+        if (it == scans.end()) {
+            throw runtime_error("Binding not found.");
+        }
+        
+        unique_ptr<OperatorNode> mo(new TableScanNode(move(it->second)));
+        scans.erase(it);
+        
+        vector<const Register*> lregs;
+        vector<const Register*> rregs;
+        
+        //order?
+        for (auto& pred : node.predicates) {
+            auto regptr = plan.createConstRegister();
+            switch (pred.constant.type) {
+                case Token::Type::tok_lit_bool:
+                    regptr->setBool(pred.constant.boolValue);
+                    break;
+                case Token::Type::tok_lit_dbl:
+                    regptr->setDouble(pred.constant.doubleValue);
+                    break;
+                case Token::Type::tok_lit_int:
+                    regptr->setInt(pred.constant.intValue);
+                    break;
+                case Token::Type::tok_lit_str:
+                    regptr->setString(pred.constant.value);
+                    break;
+                default:
+                    break;
+            }
+            lregs.push_back(plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value));
+            rregs.push_back(regptr.get());
+        }
+        
+        if (!lregs.empty() && !rregs.empty()) {
+            mo.reset(new SelectNode(move(mo), move(lregs), move(rregs)));
+        }
+        
+        return mo;
+    }
+    
+    vector<const Register*> lregs;
+    vector<const Register*> rregs;
+    
+    unique_ptr<OperatorNode> left = exhaustiveTransformation2PlanRec(graph, plan, scans, bests, cstree.left);
+    unique_ptr<OperatorNode> right = exhaustiveTransformation2PlanRec(graph, plan, scans, bests, cstree.right);
+    
+    for (auto edgpair : graph.iterateCrossEdges(cstree.left, cstree.right)) {
+        int from = edgpair.first;
+        auto& edg = edgpair.second;
+        for (auto& pred : edg.predicates) {
+            const Register* lr = plan.getRegister(pred.lhs.binding.value, pred.lhs.attribute.value);
+            const Register* rr = plan.getRegister(pred.rhs.binding.value, pred.rhs.attribute.value);
+            if (pred.lhs.binding.value != graph.getNode(from).binding.binding.value) {
+                swap(lr, rr);
+            }
+            
+            lregs.push_back(lr);
+            rregs.push_back(rr);
+        }
+    }
+    
+    return unique_ptr<OperatorNode>(new HashJoinNode(move(left), move(right), move(lregs), move(rregs)));
+}
+
+unique_ptr<OperatorNode> exhaustiveTransformation2PlanConn(QueryGraph& graph, QueryPlan& plan,
+        unordered_map<string, unique_ptr<Tablescan>>& scans) 
+{
+    ExhaustiveTransformation2 mytrans(graph);
+    
+    auto bests = mytrans.getBests();
+    
+    num_t full = (1ull << graph.getNodeCount()) - 1;
+    
+    return exhaustiveTransformation2PlanRec(graph, plan, scans, bests, full);
+}
+
+QueryPlan exhaustiveTransformation2Plan(Database& db, QueryGraph& graph) 
+{
+    auto comp = graph.getConnectedComponents();
+    
+    QueryPlan plan;
+    auto scans = plan.init(db, graph.getBindings());
+    
+    unique_ptr<OperatorNode> root;
+    
+    for (auto& g : comp) {
+        unique_ptr<OperatorNode> cur = exhaustiveTransformation2PlanConn(g, plan, scans);
+        if (!root) {
+            root.swap(cur);
+        } else {
+            root.reset(new CrossProductNode(move(root), move(cur)));
+        }
+    }
+    
+    plan.setRoot(move(root));
+    
+    return plan;
+}
