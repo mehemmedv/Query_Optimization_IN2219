@@ -1,6 +1,7 @@
 #include "RandomJoins.hpp"
 #include <vector>
 #include <iostream>
+#include <string>
 
 void GeneratePermutation::generate(int rank){
     std::vector<int> res;
@@ -20,19 +21,18 @@ void GeneratePermutation::generate(int rank){
 
 void GenerateRandomTree::generateTree(int rank){
     int cur_x = 0, cur_y = 0;
-
+    std::string res = "";
     while(cur_x != 2*relationSize){
-        //std::cout<<cur_x<<" "<<cur_y<<std::endl;
         if(dp[cur_x + 1][cur_y + 1] > rank){
-            std::cout<<"(";
+            res += "(";
             cur_x++;
             cur_y++;
         } else{
             rank -= dp[cur_x + 1][cur_y + 1];
-            std::cout<<")";
+            res += ")";
             cur_x++;
             cur_y--;
         }
     }
-    std::cout<<std::endl;
+    std::cout<<res<<std::endl;
 }
