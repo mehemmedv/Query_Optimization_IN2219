@@ -18,4 +18,8 @@ Tree QuickPick(QueryGraph &querygraph, int cnt_trees);
 
 int find(int x, int* parent);
 
+void Union(int l, int r, int* parent, int* rank, Tree** trees);
+
+int Find(int x, int* parent);
+
 #endif
