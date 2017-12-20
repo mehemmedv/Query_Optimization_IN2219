@@ -83,7 +83,7 @@ void Union(int l, int r, int* parent, int* rank, Tree** trees){
 }
 
 Tree QuickPick(QueryGraph &querygraph, int cnt_trees){
-    Tree min_cost_tree;
+    Tree* min_cost_tree = NULL;
     double min_cost = std::numeric_limits<double>::max();
     auto edges = querygraph.getAllEdges();
     int cnt_nodes = querygraph.getNodeCount();
@@ -109,7 +109,9 @@ Tree QuickPick(QueryGraph &querygraph, int cnt_trees){
         double current_cost = trees[par_tree]->cost(querygraph);
         if(current_cost < min_cost){
             min_cost = current_cost;
-            min_cost_tree = *trees[par_tree];
+            if(min_cost_tree != NULL)
+                delete min_cost_tree;
+            min_cost_tree = trees[par_tree];
         }
 
         for(int i = 0; i < cnt_nodes; ++i){
@@ -118,7 +120,7 @@ Tree QuickPick(QueryGraph &querygraph, int cnt_trees){
             rank[i] = 0;
         }
     }
-    return min_cost_tree;
+    return *min_cost_tree;
 }
 
 

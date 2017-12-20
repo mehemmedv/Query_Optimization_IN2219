@@ -22,6 +22,13 @@ private:
 public:
     Tree() : isLeaf(true){}
 
+    ~Tree(){
+        if(leftTree != NULL)
+            delete leftTree;
+        if(rightTree != NULL)
+            delete rightTree;
+    }
+
     Tree(QueryNode& querynode) : isLeaf(true), node(&querynode), leftTree(NULL), rightTree(NULL){}
     
     Tree(Tree* leftTree, Tree* rightTree) : isLeaf(false), leftTree(leftTree), rightTree(rightTree){}
