@@ -20,6 +20,7 @@ private:
     std::vector<QueryNode> getRelations(Tree* tree);
 
 public:
+    Tree() : isLeaf(true){}
 
     Tree(QueryNode& querynode) : isLeaf(true), node(&querynode), leftTree(NULL), rightTree(NULL){}
     

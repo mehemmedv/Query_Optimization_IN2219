@@ -31,6 +31,9 @@ bin/tpchexample$(EXEEXT): bin/examples/TPCHExample.o $(obj)
 bin/permutationexample$(EXEEXT): bin/examples/PermutationExample.o $(obj)
 	$(BUILDEXE)
 
+bin/quickpickexample$(EXEEXT): bin/examples/QuickPickExample.o $(obj)
+	$(BUILDEXE)
+
 
 # Alias for all examples
-examples_bin: bin/scanexample$(EXEEXT) bin/selectexample$(EXEEXT) bin/joinexample$(EXEEXT) bin/chiexample$(EXEEXT) bin/lexerexample$(EXEEXT) bin/parserexample$(EXEEXT) bin/hw01-2example$(EXEEXT) bin/hw01-1example$(EXEEXT) bin/gooexample$(EXEEXT) bin/tpchexample$(EXEEXT) bin/permutationexample$(EXEEXT)
+examples_bin: bin/scanexample$(EXEEXT) bin/selectexample$(EXEEXT) bin/joinexample$(EXEEXT) bin/chiexample$(EXEEXT) bin/lexerexample$(EXEEXT) bin/parserexample$(EXEEXT) bin/hw01-2example$(EXEEXT) bin/hw01-1example$(EXEEXT) bin/gooexample$(EXEEXT) bin/tpchexample$(EXEEXT) bin/permutationexample$(EXEEXT) bin/quickpickexample$(EXEEXT)

@@ -14,4 +14,8 @@ QueryPlan simplePlan(QueryGraph& graph);
 
 Tree GOO(QueryGraph &querygraph);
 
+Tree QuickPick(QueryGraph &querygraph, int cnt_trees);
+
+int find(int x, int* parent);
+
 #endif

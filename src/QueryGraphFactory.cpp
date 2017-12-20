@@ -61,6 +61,68 @@ QueryGraph buildGraphFromParse(Database& db, const SqlParse& parse)
     return retval;
 }
 
+int Find(int x, int* parent){
+    if(parent[x] == x)
+        return x;
+    return parent[x] = Find(parent[x], parent);
+}
+
+void Union(int l, int r, int* parent, int* rank, Tree** trees){
+    int par_l = Find(l, parent);
+    int par_r = Find(r, parent);
+
+    if(rank[par_l] > rank[par_r]){
+        parent[par_r] = par_l;
+        trees[par_l] = new Tree(trees[par_l], trees[par_r]);
+    } else{
+        parent[par_l] = par_r;
+        trees[par_r] = new Tree(trees[par_r], trees[par_l]);
+        if(rank[par_l] == rank[par_r])
+            ++rank[par_r];
+    }
+}
+
+Tree QuickPick(QueryGraph &querygraph, int cnt_trees){
+    Tree min_cost_tree;
+    double min_cost = std::numeric_limits<double>::max();
+    auto edges = querygraph.getAllEdges();
+    int cnt_nodes = querygraph.getNodeCount();
+    Tree** trees = new Tree*[cnt_nodes];
+    int *parent = new int[cnt_nodes];
+    int *rank = new int[cnt_nodes];
+    for(int i = 0; i < cnt_nodes; ++i){
+        trees[i] = new Tree(querygraph.getNode(i));
+        parent[i] = i;
+        rank[i] = 0;
+    }
+    
+
+    for(int cnt_i = 0; cnt_i < cnt_trees; ++cnt_i){
+        random_shuffle(edges.begin(), edges.end());
+        for(auto edge: edges){
+            if(Find(edge.nodeA, parent) != Find(edge.nodeB, parent)){ // different sets, can join
+                Union(edge.nodeA, edge.nodeB, parent, rank, trees);
+            }
+        }
+
+        int par_tree = Find(0, parent);
+        double current_cost = trees[par_tree]->cost(querygraph);
+        if(current_cost < min_cost){
+            min_cost = current_cost;
+            min_cost_tree = *trees[par_tree];
+        }
+
+        for(int i = 0; i < cnt_nodes; ++i){
+            trees[i] = new Tree(querygraph.getNode(i));
+            parent[i] = i;
+            rank[i] = 0;
+        }
+    }
+    return min_cost_tree;
+}
+
+
+
 Tree GOO(QueryGraph &querygraph){
     std::vector<Tree*> trees;
     
