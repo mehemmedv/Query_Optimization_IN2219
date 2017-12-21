@@ -120,6 +120,9 @@ Tree QuickPick(QueryGraph &querygraph, int cnt_trees){
             rank[i] = 0;
         }
     }
+    delete[] trees;
+    delete[] parent;
+    delete[] rank;
     return *min_cost_tree;
 }
 
