@@ -53,10 +53,15 @@ int main()
     db.open("data/tpch/tpch");
     
     
-    string sample = "select l_orderkey, o_orderkey, c_custkey from lineitem l, orders o, customer c where l.l_orderkey=o.o_orderkey and o.o_custkey=c.c_custkey and c.c_name='Customer#000014993'";
+    vector<string> samples = {"select s_acctbal, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment from part p, supplier s, partsupp ps, nation n, region r where p.p_partkey = ps.ps_partkey and s.s_suppkey = ps.ps_suppkey and p.p_size = 15 and s.s_nationkey = n.n_nationkey and n.n_regionkey = r.r_regionkey and r.r_name = 'EUROPE'",
+        "select n_name from customer c, orders o, lineitem l, supplier s, nation n, region r where c.c_custkey = o.o_custkey and l.l_orderkey = o.o_orderkey and l.l_suppkey = s.s_suppkey and c.c_nationkey = s.s_nationkey and s.s_nationkey = n.n_nationkey and n.n_regionkey = r.r_regionkey and r.r_name = 'ASIA'",
+        "select ps_partkey from part p, partsupp ps, supplier s, nation n, region r where p.p_partkey = ps.ps_partkey and s.s_suppkey = ps.ps_suppkey and s.s_nationkey = n.n_nationkey and n.n_regionkey = r.r_regionkey and r.r_name = 'EUROPE'"};
     //string sample = "select name from studenten s, hoeren h, vorlesungen v where s.matrnr = h.matrnr and h.vorlnr=v.vorlnr and v.titel='Ethik'\0";
-    cout << "> " << sample << endl;
-    execute_query(db, sample);
+    for (auto& sample : samples) {
+        cout << "> " << sample << endl;
+        execute_query(db, sample);
+        cout << endl;
+    }
     
     string s;
     cout << "> "; getline(cin, s);
